@@ -1,7 +1,7 @@
 import type { MediaReader, Platform, PlatformAdapter } from '@fanout/core-posting';
-import { createYouTubeAdapter } from '@fanout/core-posting';
+import { createXAdapter, createYouTubeAdapter } from '@fanout/core-posting';
 
-import { GOOGLE_CLIENT_ID } from '../config';
+import { GOOGLE_CLIENT_ID, X_CLIENT_ID } from '../config';
 
 export type AdapterRegistry = Partial<Record<Platform, PlatformAdapter>>;
 
@@ -17,6 +17,10 @@ export function createAdapters(readMedia?: MediaReader): AdapterRegistry {
   return {
     youtube: createYouTubeAdapter({
       clientId: GOOGLE_CLIENT_ID,
+      ...(readMedia ? { readMedia } : {}),
+    }),
+    x: createXAdapter({
+      clientId: X_CLIENT_ID,
       ...(readMedia ? { readMedia } : {}),
     }),
   };

@@ -36,6 +36,12 @@ export interface Account {
   displayName?: string;
   avatarUrl?: string;
   /**
+   * Scopes the platform said it granted at connect time, where the platform
+   * reports them on the token response. Adapters whose API has no way to ask
+   * later check posting permission against this.
+   */
+  grantedScopes?: string[];
+  /**
    * Epoch ms of the last successful verifyConnection. Only verified accounts
    * are stored, so its presence is what earns the Connections checkmark.
    */

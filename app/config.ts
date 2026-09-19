@@ -9,13 +9,29 @@
  */
 
 export const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+export const X_CLIENT_ID = process.env.EXPO_PUBLIC_X_CLIENT_ID ?? '';
 
-export function requireGoogleClientId(): string {
-  if (!GOOGLE_CLIENT_ID) {
+function required(value: string, name: string, detail: string): string {
+  if (!value) {
     throw new Error(
-      'Missing EXPO_PUBLIC_GOOGLE_CLIENT_ID. Copy .env.example to .env and set your ' +
-        'Google OAuth client id (installed-app type), then restart the bundler.',
+      `Missing ${name}. Copy .env.example to .env and set ${detail}, then restart the bundler.`,
     );
   }
-  return GOOGLE_CLIENT_ID;
+  return value;
+}
+
+export function requireGoogleClientId(): string {
+  return required(
+    GOOGLE_CLIENT_ID,
+    'EXPO_PUBLIC_GOOGLE_CLIENT_ID',
+    'your Google OAuth client id (installed-app type)',
+  );
+}
+
+export function requireXClientId(): string {
+  return required(
+    X_CLIENT_ID,
+    'EXPO_PUBLIC_X_CLIENT_ID',
+    "your X app's OAuth 2.0 client id (native app / public client)",
+  );
 }

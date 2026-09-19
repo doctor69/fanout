@@ -1,7 +1,9 @@
 import type { Account } from '@fanout/core-posting';
-import * as AuthSession from 'expo-auth-session';
+import { YOUTUBE_UPLOAD_SCOPE } from '@fanout/core-posting';
+import type * as AuthSession from 'expo-auth-session';
 
 import { requireGoogleClientId } from '../../config';
+import { redirectUriFor, runPkceFlow } from './pkce';
 
 /**
  * YouTube connect flow: OAuth 2.0 + PKCE against an installed-app client, in
@@ -16,7 +18,7 @@ const discovery: AuthSession.DiscoveryDocument = {
 };
 
 const SCOPES = [
-  'https://www.googleapis.com/auth/youtube.upload',
+  YOUTUBE_UPLOAD_SCOPE,
   // OpenID scopes only, so the Connections row can show who is connected
   // without asking for any broader YouTube read access.
   'openid',
@@ -26,7 +28,7 @@ const SCOPES = [
 const USERINFO_ENDPOINT = 'https://openidconnect.googleapis.com/v1/userinfo';
 
 export function youtubeRedirectUri(): string {
-  return AuthSession.makeRedirectUri({ scheme: 'fanout', path: 'oauth/youtube' });
+  return redirectUriFor('oauth/youtube');
 }
 
 interface UserInfo {
@@ -54,13 +56,12 @@ async function fetchUserInfo(accessToken: string): Promise<UserInfo> {
  */
 export async function connectYouTube(): Promise<Account | null> {
   const clientId = requireGoogleClientId();
-  const redirectUri = youtubeRedirectUri();
 
-  const request = new AuthSession.AuthRequest({
+  const flow = await runPkceFlow({
     clientId,
-    redirectUri,
+    discovery,
     scopes: SCOPES,
-    usePKCE: true,
+    redirectPath: 'oauth/youtube',
     extraParams: {
       // Both are required for Google to issue a refresh token to a native app;
       // without them the connection would silently die after an hour.
@@ -68,37 +69,20 @@ export async function connectYouTube(): Promise<Account | null> {
       prompt: 'consent',
     },
   });
+  if (!flow) return null;
 
-  const result = await request.promptAsync(discovery);
-
-  if (result.type === 'cancel' || result.type === 'dismiss') return null;
-  if (result.type === 'error') {
-    throw new Error(result.params.error_description ?? result.error?.message ?? 'YouTube sign-in failed.');
-  }
-  if (result.type !== 'success' || !result.params.code) {
-    throw new Error('YouTube sign-in did not return an authorization code.');
-  }
-
-  const token = await AuthSession.exchangeCodeAsync(
-    {
-      clientId,
-      code: result.params.code,
-      redirectUri,
-      extraParams: request.codeVerifier ? { code_verifier: request.codeVerifier } : {},
-    },
-    discovery,
-  );
-
+  const { token, grantedScopes } = flow;
   const profile = await fetchUserInfo(token.accessToken);
 
   return {
     platform: 'youtube',
     accessToken: token.accessToken,
-    refreshToken: token.refreshToken,
+    ...(token.refreshToken ? { refreshToken: token.refreshToken } : {}),
     expiresAt: (token.issuedAt + (token.expiresIn ?? 3600)) * 1000,
     externalUserId: profile.sub ?? 'unknown',
-    displayName: profile.name,
-    avatarUrl: profile.picture,
+    ...(profile.name ? { displayName: profile.name } : {}),
+    ...(profile.picture ? { avatarUrl: profile.picture } : {}),
+    ...(grantedScopes ? { grantedScopes } : {}),
     connectedAt: Date.now(),
   };
 }

@@ -51,11 +51,24 @@ before tackling platforms that need the serverless function.
 
 ## Phase 3 — Remaining PKCE/no-server platforms (X)
 
-- [ ] Confirm current X OAuth 2.0 PKCE scopes/requirements against X's
-      developer docs (they change) before implementing.
-- [ ] Implement `xAdapter` (media upload + post) and its OAuth connect flow.
-- [ ] Add X to the Connections and Composer screens; re-verify fan-out with
-      2 platforms connected, including one platform opted out on a post.
+- [x] Confirm current X OAuth 2.0 PKCE scopes/requirements against X's
+      developer docs (they change) before implementing. *(docs.x.com is
+      blocked by this environment's egress proxy, so endpoints and scopes
+      were confirmed against the current source of a maintained X API client
+      plus search results: authorize at `x.com/i/oauth2/authorize`, token at
+      `api.x.com/2/oauth2/token`, chunked media at
+      `/2/media/upload/{initialize,append,finalize}` — the old
+      `command=INIT|APPEND|FINALIZE` form protocol is gone — and scopes
+      `tweet.read tweet.write media.write users.read offline.access`.
+      Worth a re-check against the docs when they're reachable.)*
+- [x] Implement `xAdapter` (media upload + post) and its OAuth connect flow.
+- [x] Add X to the Connections and Composer screens. *(Both are driven by the
+      platform list and the connected-account list, so X appears as soon as
+      it has a connect flow and an adapter.)*
+- [ ] Re-verify fan-out with 2 platforms connected, including one platform
+      opted out of a post. **Blocked on Doctor:** needs both accounts on a
+      device. The opt-out path itself is covered by an automated test in
+      `fanOutPost`.
 
 ## Phase 4 — TikTok
 
