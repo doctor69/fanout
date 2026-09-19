@@ -1,0 +1,19 @@
+{
+  "name": "fanout",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Post once, fan out to every connected social account.",
+  "workspaces": [
+    "app",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=@fanout/core-posting",
+    "test": "npm run test --workspace=@fanout/core-posting",
+    "typecheck": "npm run typecheck --workspace=@fanout/core-posting && npm run typecheck --workspace=app",
+    "start": "npm run start --workspace=app"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

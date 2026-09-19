@@ -7,15 +7,15 @@ the same commit as the work.
 
 ## Phase 0 — Project setup
 
-- [ ] Initialize Expo (TypeScript template) app under `/app`.
-- [ ] Initialize `/packages/core-posting` as a standalone TS package (no RN
+- [x] Initialize Expo (TypeScript template) app under `/app`.
+- [x] Initialize `/packages/core-posting` as a standalone TS package (no RN
       deps), wired into the app via workspace linking (npm/yarn/pnpm
       workspaces).
-- [ ] Confirm `/packages/core-posting` builds and runs its own unit tests in
+- [x] Confirm `/packages/core-posting` builds and runs its own unit tests in
       plain Node (proves the no-RN-dependency rule from the start).
-- [ ] Add `expo-auth-session`, `expo-secure-store`, `expo-image-picker` (or
+- [x] Add `expo-auth-session`, `expo-secure-store`, `expo-image-picker` (or
       equivalent media picker) to `/app`.
-- [ ] Stub out the type definitions from `01-architecture.md`
+- [x] Stub out the type definitions from `01-architecture.md`
       (`Platform`, `Account`, `PostContent`, `PostResult`, `PlatformAdapter`,
       `TokenStore`) in `/packages/core-posting/src/types.ts`.
 
