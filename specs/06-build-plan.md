@@ -24,14 +24,18 @@ the same commit as the work.
 Pick YouTube first: PKCE only, no server hop, proves the whole chain works
 before tackling platforms that need the serverless function.
 
-- [ ] Implement `SecureStoreTokenStore` (`TokenStore` interface).
-- [ ] Implement YouTube OAuth connect flow via `expo-auth-session` PKCE.
-- [ ] Build `ConnectionsScreen` with the 6-row list; only YouTube is
+- [x] Implement `SecureStoreTokenStore` (`TokenStore` interface).
+- [x] Implement YouTube OAuth connect flow via `expo-auth-session` PKCE.
+- [x] Build `ConnectionsScreen` with the 6-row list; only YouTube is
       functional, other 5 show "Connect" but can no-op/alert for now.
-- [ ] Implement `youtubeAdapter.publish()` (resumable upload via Data API)
+- [x] Implement `youtubeAdapter.publish()` (resumable upload via Data API)
       and `refreshTokenIfNeeded()`.
 - [ ] Manually verify: connect YouTube, see checkmark, disconnect, checkmark
-      disappears.
+      disappears. **Blocked on Doctor:** needs a Google Cloud OAuth client
+      (installed-app type, YouTube Data API v3 enabled) in `app/.env` as
+      `EXPO_PUBLIC_GOOGLE_CLIENT_ID`, with `fanout:/oauth/youtube` registered
+      as its redirect URI, plus a dev build — Expo Go uses its own scheme, so
+      the custom-scheme redirect won't come back to the app there.
 
 ## Phase 2 — Composer + fan-out logic (still YouTube-only target)
 

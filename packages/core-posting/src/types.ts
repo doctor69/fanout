@@ -52,6 +52,27 @@ export interface PostResult {
   needsReconnect?: boolean;
 }
 
+/**
+ * A piece of media resolved into bytes the adapters can upload.
+ *
+ * PostContent.mediaUri is a local file URI on mobile and a URL on the server
+ * (specs/01-architecture.md), and this package may not import expo-file-system
+ * or any other mobile API — so reading it is injected, not hardcoded. The app
+ * passes a reader backed by React Native's Blob support; v2 can pass one
+ * backed by S3, a stream, or whatever it stores uploads in.
+ */
+export interface MediaFile {
+  data: Blob;
+  contentType: string;
+  /** Bytes. Platforms need it up front to open a resumable upload session. */
+  size: number;
+}
+
+export type MediaReader = (content: PostContent) => Promise<MediaFile>;
+
+/** Injectable fetch so adapters stay testable in plain Node. */
+export type FetchLike = typeof globalThis.fetch;
+
 export interface PlatformAdapter {
   platform: Platform;
   /**

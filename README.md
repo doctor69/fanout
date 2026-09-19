@@ -43,10 +43,16 @@ only.
 
 ## Status
 
-Phase 0 of `specs/06-build-plan.md` is complete: workspaces, the core package
-with its Node test suite, the Expo app, and the shared type definitions.
-Phase 1 (Connections screen + YouTube end-to-end) is next and needs a Google
-OAuth client id plus a device to verify on.
+Phase 0 of `specs/06-build-plan.md` is complete, and Phase 1 is code-complete:
+the Connections screen, `SecureStoreTokenStore`, the YouTube PKCE connect flow
+and the YouTube adapter (resumable upload + silent refresh) are all in.
+
+Phase 1's last checklist item — manually connecting a real YouTube account —
+is blocked on credentials only: create a Google Cloud OAuth client of the
+**installed app** type with the YouTube Data API v3 enabled, register
+`fanout:/oauth/youtube` as its redirect URI, and put the id in `app/.env` as
+`EXPO_PUBLIC_GOOGLE_CLIENT_ID` (copy `app/.env.example`). That flow needs a dev
+build rather than Expo Go, since Expo Go serves its own URL scheme.
 
 ## Security
 
