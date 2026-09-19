@@ -1,0 +1,112 @@
+# 06 — Build Plan (Spec-Driven, Phased)
+
+Work top to bottom. Do not start a phase until the previous phase's checklist
+is fully checked and the app builds/runs on at least one platform (iOS or
+Android simulator). Check items off in this file as you complete them, in
+the same commit as the work.
+
+## Phase 0 — Project setup
+
+- [ ] Initialize Expo (TypeScript template) app under `/app`.
+- [ ] Initialize `/packages/core-posting` as a standalone TS package (no RN
+      deps), wired into the app via workspace linking (npm/yarn/pnpm
+      workspaces).
+- [ ] Confirm `/packages/core-posting` builds and runs its own unit tests in
+      plain Node (proves the no-RN-dependency rule from the start).
+- [ ] Add `expo-auth-session`, `expo-secure-store`, `expo-image-picker` (or
+      equivalent media picker) to `/app`.
+- [ ] Stub out the type definitions from `01-architecture.md`
+      (`Platform`, `Account`, `PostContent`, `PostResult`, `PlatformAdapter`,
+      `TokenStore`) in `/packages/core-posting/src/types.ts`.
+
+## Phase 1 — Connections screen + one platform end-to-end (YouTube)
+
+Pick YouTube first: PKCE only, no server hop, proves the whole chain works
+before tackling platforms that need the serverless function.
+
+- [ ] Implement `SecureStoreTokenStore` (`TokenStore` interface).
+- [ ] Implement YouTube OAuth connect flow via `expo-auth-session` PKCE.
+- [ ] Build `ConnectionsScreen` with the 6-row list; only YouTube is
+      functional, other 5 show "Connect" but can no-op/alert for now.
+- [ ] Implement `youtubeAdapter.publish()` (resumable upload via Data API)
+      and `refreshTokenIfNeeded()`.
+- [ ] Manually verify: connect YouTube, see checkmark, disconnect, checkmark
+      disappears.
+
+## Phase 2 — Composer + fan-out logic (still YouTube-only target)
+
+- [ ] Build `ComposerScreen`: media picker, caption field, platform chip row
+      (only YouTube will appear as a chip at this point).
+- [ ] Implement `fanOutPost` in `/packages/core-posting` exactly per the
+      pseudocode in `01-architecture.md`.
+- [ ] Wire the Post button to `fanOutPost`, show per-platform result state
+      per `04-posting-flow.md`.
+- [ ] Manually verify: post a real short video, see it land on YouTube,
+      see success state in-app.
+
+## Phase 3 — Remaining PKCE/no-server platforms (X)
+
+- [ ] Confirm current X OAuth 2.0 PKCE scopes/requirements against X's
+      developer docs (they change) before implementing.
+- [ ] Implement `xAdapter` (media upload + post) and its OAuth connect flow.
+- [ ] Add X to the Connections and Composer screens; re-verify fan-out with
+      2 platforms connected, including one platform opted out on a post.
+
+## Phase 4 — TikTok
+
+- [ ] Register a TikTok developer app, confirm current mobile PKCE
+      requirements for Login Kit (flag to Doctor if a server hop turns out
+      to be required — see open question in `03-auth-and-oauth.md`).
+- [ ] Implement `tiktokAdapter` against the sandbox first (posts will be
+      private-only pre-audit — this is expected, not a bug).
+- [ ] Add to Connections/Composer screens.
+- [ ] Flag to Doctor: app audit submission needed before TikTok posts can be
+      public (requires privacy policy URL + demo video — manual step, not
+      something Claude Code can do alone).
+
+## Phase 5 — Serverless token-exchange function
+
+- [ ] Set up `/functions/token-exchange` (Cloudflare Worker or Vercel Edge
+      Function — pick whichever has simpler local dev/deploy for this repo).
+- [ ] Deploy to the platform's free tier; confirm it's reachable from the
+      Expo app in dev.
+- [ ] Store Meta and LinkedIn client secrets as environment variables on the
+      function only — never commit them, never reference them from `/app`.
+
+## Phase 6 — Instagram + Facebook (Meta Graph API)
+
+- [ ] Register Meta app, set up a test Facebook Page + linked Instagram
+      Business/Creator account for development.
+- [ ] Implement connect flow: app gets auth code → sends to
+      `/functions/token-exchange` → receives tokens → stores via
+      `SecureStoreTokenStore`.
+- [ ] Implement `instagramAdapter` and `facebookAdapter`.
+- [ ] Add both to Connections/Composer screens.
+- [ ] Flag to Doctor: Meta App Review needed before this works for real
+      end users beyond test accounts — manual step.
+
+## Phase 7 — LinkedIn
+
+- [ ] Register LinkedIn developer app.
+- [ ] Same token-exchange-function pattern as Phase 6.
+- [ ] Implement `linkedinAdapter`.
+- [ ] Add to Connections/Composer screens — all 6 platforms now present.
+
+## Phase 8 — Hardening
+
+- [ ] Token refresh tested for every platform (force-expire and confirm
+      silent refresh works before a post).
+- [ ] "Reconnect" deep-link flow tested for a fully revoked/expired refresh
+      token on each platform.
+- [ ] Confirm no client secret or token ever appears in logs (grep build
+      output / console for accidental leaks).
+- [ ] Confirm one platform failing during fan-out never blocks or delays the
+      others' success state.
+- [ ] Run through `00-product-overview.md`'s success criteria end to end.
+
+## Phase 9 — iOS port verification
+
+- [ ] Full pass on iOS simulator/device: OAuth redirect URIs, secure store,
+      media picker, all 6 adapters — since Expo gives one codebase, this
+      should mostly be verification, not new implementation. Log any
+      platform-specific fixes needed back into the relevant adapter/spec.
