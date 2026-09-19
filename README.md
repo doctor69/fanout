@@ -31,6 +31,7 @@ npm install          # installs both workspaces and links @fanout/core-posting
 npm test             # builds core-posting and runs its unit tests in plain Node
 npm run typecheck    # strict tsc over both workspaces
 npm start            # expo start
+npm run check:leaks  # proves no secret value is compiled into the app bundle
 ```
 
 ### Note on adding Expo modules
@@ -43,24 +44,24 @@ only.
 
 ## Status
 
-Phase 0 of `specs/06-build-plan.md` is complete, and Phase 1 is code-complete:
-the Connections screen, `SecureStoreTokenStore`, the YouTube PKCE connect flow
-and the YouTube adapter (resumable upload + silent refresh) are all in.
+All six platforms are implemented: YouTube, X, TikTok, Instagram, Facebook
+and LinkedIn each have an adapter, a connect flow and a row in both screens.
+Phases 0-7 of `specs/06-build-plan.md` are code-complete, and Phase 8's
+automatable checks pass.
 
-Connecting is verified before it counts: after the OAuth flow the adapter
-checks that the token is live and that the posting scope was really granted,
-and only a verified account is stored. The green checkmark therefore means
-"this account can be posted to", not "a browser flow finished".
+What's left needs credentials or a device, and is listed phase by phase in
+`specs/06-build-plan.md`: registering each platform's developer app,
+deploying the token-exchange function, TikTok's app audit, Meta's App
+Review, and the end-to-end pass on a real device.
 
-Phase 1's last checklist item — manually connecting a real YouTube account —
-is blocked on credentials only: create a Google Cloud OAuth client of the
-**installed app** type with the YouTube Data API v3 enabled, register
-`fanout:/oauth/youtube` as its redirect URI, and put the id in `app/.env` as
-`EXPO_PUBLIC_GOOGLE_CLIENT_ID` (copy `app/.env.example`). That flow needs a dev
-build rather than Expo Go, since Expo Go serves its own URL scheme.
+Two product decisions are flagged there too: neither TikTok nor Instagram
+accepts a photo without a publicly reachable URL, so photos to those two
+would need somewhere to host the image first; and v1 connects the first
+eligible Facebook Page with no way to choose between several.
 
 ## Security
 
 Non-negotiables are listed in `CLAUDE.md` and `specs/03-auth-and-oauth.md`:
 no platform client secret ever ships in the app bundle, tokens live only in
-`expo-secure-store`, and tokens are never logged.
+`expo-secure-store`, and tokens are never logged. `npm run check:leaks`
+enforces the first and third against a freshly built bundle.

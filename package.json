@@ -12,7 +12,8 @@
     "build": "npm run build --workspace=@fanout/core-posting && npm run build --workspace=@fanout/token-exchange",
     "test": "npm run test --workspace=@fanout/core-posting && npm run test --workspace=@fanout/token-exchange",
     "typecheck": "npm run typecheck --workspace=@fanout/core-posting && npm run typecheck --workspace=@fanout/token-exchange && npm run typecheck --workspace=app",
-    "start": "npm run start --workspace=app"
+    "start": "npm run start --workspace=app",
+    "check:leaks": "bash scripts/check-no-leaks.sh"
   },
   "engines": {
     "node": ">=20"

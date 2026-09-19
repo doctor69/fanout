@@ -167,14 +167,29 @@ before tackling platforms that need the serverless function.
 ## Phase 8 — Hardening
 
 - [ ] Token refresh tested for every platform (force-expire and confirm
-      silent refresh works before a post).
+      silent refresh works before a post). *(The logic is covered per adapter
+      by automated tests — the refresh margin, same-reference-when-fresh,
+      token rotation where the platform rotates, and re-deriving Meta's Page
+      token. Confirming it against live tokens is Doctor's device pass.)*
 - [ ] "Reconnect" deep-link flow tested for a fully revoked/expired refresh
-      token on each platform.
-- [ ] Confirm no client secret or token ever appears in logs (grep build
-      output / console for accidental leaks).
-- [ ] Confirm one platform failing during fan-out never blocks or delays the
-      others' success state.
+      token on each platform. *(Every adapter maps a dead grant to
+      needsReconnect, fanOutPost preserves it, and the composer turns it into
+      a "Reconnect <platform>" action that deep-links to the highlighted
+      Connections row. Live revocation is Doctor's device pass.)*
+- [x] Confirm no client secret or token ever appears in logs (grep build
+      output / console for accidental leaks). *(`npm run check:leaks`:
+      no client-secret handling outside /functions, no console calls in
+      token-handling code, and no secret VALUE from `app/.env` or
+      `functions/.dev.vars` present in a freshly built bundle. It builds with
+      `--clear` — Metro's cache will otherwise hand back a bundle from before
+      the .env existed and the check passes on nothing. Verified by planting
+      a leak and watching it fail.)*
+- [x] Confirm one platform failing during fan-out never blocks or delays the
+      others' success state. *(Automated: one platform resolving a failure,
+      one throwing, and a third still succeeding independently — plus a test
+      that each result is reported as it resolves rather than at the end.)*
 - [ ] Run through `00-product-overview.md`'s success criteria end to end.
+      **Doctor's device pass**, once the credentials are in place.
 
 ## Phase 9 — iOS port verification
 
