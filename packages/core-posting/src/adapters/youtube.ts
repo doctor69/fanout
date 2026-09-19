@@ -2,6 +2,7 @@ import { PlatformRejectedError, ReconnectRequiredError, UnsupportedMediaError } 
 import { createFetchMediaReader } from '../media';
 import type {
   Account,
+  ConnectionVerification,
   FetchLike,
   MediaReader,
   PlatformAdapter,
@@ -12,8 +13,16 @@ import type {
 const PLATFORM = 'youtube' as const;
 
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
+const TOKENINFO_ENDPOINT = 'https://oauth2.googleapis.com/tokeninfo';
 const UPLOAD_ENDPOINT =
   'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet%2Cstatus';
+
+/**
+ * The grant a YouTube upload needs. A user can finish the Google consent
+ * screen with this box unticked, which yields a perfectly valid token that
+ * cannot post — which is exactly what verifyConnection exists to catch.
+ */
+export const YOUTUBE_UPLOAD_SCOPE = 'https://www.googleapis.com/auth/youtube.upload';
 
 /** Refresh this long before expiry rather than at it (specs/03-auth-and-oauth.md). */
 const REFRESH_MARGIN_MS = 5 * 60 * 1000;
@@ -161,6 +170,49 @@ export function createYouTubeAdapter(config: YouTubeAdapterConfig): PlatformAdap
     return uploadUrl;
   }
 
+  /**
+   * Asks Google what this access token actually is: whether it is still live,
+   * and which scopes were granted. Both answers come from one call, and it
+   * needs no scope of its own.
+   */
+  async function verifyConnection(account: Account): Promise<ConnectionVerification> {
+    let response: Response;
+    try {
+      response = await doFetch(
+        `${TOKENINFO_ENDPOINT}?access_token=${encodeURIComponent(account.accessToken)}`,
+      );
+    } catch {
+      return {
+        verified: false,
+        error: "Couldn't reach YouTube to check the connection. Check your network and try again.",
+      };
+    }
+
+    if (!response.ok) {
+      return {
+        verified: false,
+        needsReconnect: true,
+        error: `YouTube didn't accept the sign-in (${await describeFailure(response)}). Try connecting again.`,
+      };
+    }
+
+    const info = (await response.json()) as { scope?: string };
+    const grantedScopes = info.scope ? info.scope.split(' ').filter(Boolean) : [];
+
+    if (!grantedScopes.includes(YOUTUBE_UPLOAD_SCOPE)) {
+      return {
+        verified: false,
+        grantedScopes,
+        needsReconnect: true,
+        error:
+          'YouTube signed you in but did not grant permission to upload videos. ' +
+          'Connect again and leave the upload permission ticked.',
+      };
+    }
+
+    return { verified: true, grantedScopes };
+  }
+
   async function publish(account: Account, content: PostContent): Promise<PostResult> {
     try {
       if (content.mediaType !== 'video') {
@@ -213,5 +265,5 @@ export function createYouTubeAdapter(config: YouTubeAdapterConfig): PlatformAdap
     }
   }
 
-  return { platform: PLATFORM, refreshTokenIfNeeded, publish };
+  return { platform: PLATFORM, refreshTokenIfNeeded, publish, verifyConnection };
 }

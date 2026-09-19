@@ -3,11 +3,17 @@
 ## Connections screen
 
 - Fixed list of 6 rows: YouTube, TikTok, Instagram, Facebook, X, LinkedIn.
-- Each row: platform icon, platform name, and either:
-  - a **checkmark + display name** if connected (tap row → shows
-    "Disconnect" confirmation), or
+- Each row: platform icon, platform name, and one of:
+  - a **checkmark + display name** if connected *and verified* (tap row →
+    shows "Disconnect" confirmation),
+  - an **in-flight state** while connecting — "Signing in…" during the
+    browser flow, "Verifying…" while `verifyConnection` runs, or
   - a **"Connect" button** if not connected (tap → launches that platform's
     OAuth flow per `03-auth-and-oauth.md`).
+- The checkmark means "this account can be posted to", not "a browser flow
+  finished". It appears only after verification succeeds; a sign-in that
+  can't be verified isn't stored, and the row explains why in the platform's
+  own words.
 - No ordering logic needed beyond a fixed list; connected/disconnected state
   alone communicates status.
 

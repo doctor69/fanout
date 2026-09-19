@@ -61,12 +61,21 @@ interface PostResult {
   status: 'success' | 'failure';
   platformPostId?: string;
   error?: string;
+  needsReconnect?: boolean;   // auth is dead: offer "Reconnect", not "Retry"
+}
+
+interface ConnectionVerification {
+  verified: boolean;
+  error?: string;             // why not, phrased for the Connections row
+  grantedScopes?: string[];   // what the platform says it actually granted
+  needsReconnect?: boolean;   // re-run OAuth rather than retry
 }
 
 interface PlatformAdapter {
   platform: Platform;
   refreshTokenIfNeeded(account: Account): Promise<Account>;
   publish(account: Account, content: PostContent): Promise<PostResult>;
+  verifyConnection(account: Account): Promise<ConnectionVerification>;
 }
 
 interface TokenStore {
@@ -116,6 +125,13 @@ Rules for every `PlatformAdapter` implementation:
 - `refreshTokenIfNeeded` returns the *same* account object (reference
   equality) if no refresh was needed, so the orchestrator knows not to
   re-save it.
+- `verifyConnection` proves the grant can actually post — the token is live
+  *and* carries the posting scope. Finishing an OAuth flow does not prove
+  either: a user can complete the consent screen with the posting permission
+  unticked and come back holding a valid token that cannot post. It never
+  throws; an unverifiable connection is `verified: false` with a readable
+  reason. Which call proves it is per-platform and belongs in the adapter,
+  never in a screen.
 - One adapter file per platform under
   `/packages/core-posting/src/adapters/<platform>.ts`. No shared mutable
   state between adapters.

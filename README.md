@@ -47,6 +47,11 @@ Phase 0 of `specs/06-build-plan.md` is complete, and Phase 1 is code-complete:
 the Connections screen, `SecureStoreTokenStore`, the YouTube PKCE connect flow
 and the YouTube adapter (resumable upload + silent refresh) are all in.
 
+Connecting is verified before it counts: after the OAuth flow the adapter
+checks that the token is live and that the posting scope was really granted,
+and only a verified account is stored. The green checkmark therefore means
+"this account can be posted to", not "a browser flow finished".
+
 Phase 1's last checklist item — manually connecting a real YouTube account —
 is blocked on credentials only: create a Google Cloud OAuth client of the
 **installed app** type with the YouTube Data API v3 enabled, register

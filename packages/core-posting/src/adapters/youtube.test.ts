@@ -212,3 +212,61 @@ test('publish reports an upload that returns no video id', async () => {
   assert.equal(result.status, 'failure');
   assert.match(result.error ?? '', /no video id/);
 });
+
+test('verifyConnection passes a live token that carries the upload scope', async () => {
+  const { adapter: youtube, calls } = adapter([
+    Response.json({
+      scope: `openid profile ${'https://www.googleapis.com/auth/youtube.upload'}`,
+      expires_in: '3599',
+    }),
+  ]);
+
+  const result = await youtube.verifyConnection(account());
+
+  assert.equal(result.verified, true);
+  assert.ok(result.grantedScopes?.includes('https://www.googleapis.com/auth/youtube.upload'));
+  assert.equal(result.error, undefined);
+  assert.match(calls[0]?.url ?? '', /^https:\/\/oauth2\.googleapis\.com\/tokeninfo\?access_token=/);
+});
+
+test('verifyConnection rejects a sign-in that withheld the upload permission', async () => {
+  const { adapter: youtube } = adapter([
+    Response.json({ scope: 'openid profile', expires_in: '3599' }),
+  ]);
+
+  const result = await youtube.verifyConnection(account());
+
+  assert.equal(result.verified, false);
+  assert.equal(result.needsReconnect, true);
+  assert.match(result.error ?? '', /did not grant permission to upload/);
+  assert.deepEqual(result.grantedScopes, ['openid', 'profile']);
+});
+
+test('verifyConnection rejects a token Google no longer recognises', async () => {
+  const { adapter: youtube } = adapter([
+    Response.json({ error: 'invalid_token' }, { status: 400 }),
+  ]);
+
+  const result = await youtube.verifyConnection(account());
+
+  assert.equal(result.verified, false);
+  assert.equal(result.needsReconnect, true);
+});
+
+test('verifyConnection fails closed when the network is down', async () => {
+  const offline = (async () => {
+    throw new TypeError('fetch failed');
+  }) as unknown as typeof globalThis.fetch;
+  const youtube = createYouTubeAdapter({
+    clientId: 'client-id.apps.googleusercontent.com',
+    fetch: offline,
+    now: () => NOW,
+  });
+
+  const result = await youtube.verifyConnection(account());
+
+  // No checkmark without proof — but this one is worth retrying, not reconnecting.
+  assert.equal(result.verified, false);
+  assert.equal(result.needsReconnect, undefined);
+  assert.match(result.error ?? '', /Couldn't reach YouTube/);
+});

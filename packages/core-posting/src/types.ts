@@ -35,6 +35,11 @@ export interface Account {
   /** Display-only fields (specs/02-data-model.md); the engine never depends on them. */
   displayName?: string;
   avatarUrl?: string;
+  /**
+   * Epoch ms of the last successful verifyConnection. Only verified accounts
+   * are stored, so its presence is what earns the Connections checkmark.
+   */
+  verifiedAt?: number;
   /** Epoch ms, display only. Optional so a v2 TokenStore isn't forced to synthesize it. */
   connectedAt?: number;
 }
@@ -73,6 +78,24 @@ export type MediaReader = (content: PostContent) => Promise<MediaFile>;
 /** Injectable fetch so adapters stay testable in plain Node. */
 export type FetchLike = typeof globalThis.fetch;
 
+/**
+ * The result of proving a stored grant can actually post.
+ *
+ * The Connections screen only shows a platform as connected once this comes
+ * back verified (specs/04-posting-flow.md) — signing in is not the same thing
+ * as being able to post, because a user can complete the browser flow while
+ * declining the permission the posting call needs.
+ */
+export interface ConnectionVerification {
+  verified: boolean;
+  /** Why verification failed, phrased for display in the Connections row. */
+  error?: string;
+  /** The scopes the platform reports it actually granted, when it reports them. */
+  grantedScopes?: string[];
+  /** True when the fix is to run the OAuth flow again rather than to retry. */
+  needsReconnect?: boolean;
+}
+
 export interface PlatformAdapter {
   platform: Platform;
   /**
@@ -85,6 +108,14 @@ export interface PlatformAdapter {
    * limited) — resolves a PostResult with status 'failure' and a readable error.
    */
   publish(account: Account, content: PostContent): Promise<PostResult>;
+  /**
+   * Confirms the account's grant is live and covers posting. Called right
+   * after a connect, before the account is stored and the checkmark shown.
+   * Never throws — an unverifiable connection is a `verified: false` result
+   * with a readable reason. Callers wanting to re-verify an older account
+   * should run refreshTokenIfNeeded first.
+   */
+  verifyConnection(account: Account): Promise<ConnectionVerification>;
 }
 
 export interface TokenStore {

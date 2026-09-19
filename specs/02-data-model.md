@@ -16,6 +16,7 @@ per-API-key instead of per-device, but is out of scope for this repo — see
 | displayName     | string?               | shown in Connections screen                       |
 | avatarUrl       | string?               | shown in Connections screen                       |
 | connectedAt     | number (epoch ms)    | for display only                                  |
+| verifiedAt      | number (epoch ms)    | last successful `verifyConnection`; only verified accounts are stored, so its presence is what earns the checkmark |
 
 Stored as one secure-store entry per platform, keyed `account:<platform>`.
 The Connections screen reads all 6 possible keys and renders a checkmark for

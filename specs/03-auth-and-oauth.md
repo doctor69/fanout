@@ -4,9 +4,18 @@ All flows use `expo-auth-session` (native browser tab, not embedded WebView)
 so tokens never pass through app-controlled JS context unnecessarily, and so
 each platform sees the flow as coming from a legitimate installed app.
 
-For every platform: on successful connect, write an `Account` record (see
-`02-data-model.md`) to secure storage, then navigate back to
-`ConnectionsScreen` and show the checkmark.
+For every platform: on successful connect, **verify the connection before
+storing anything**. Call the adapter's `verifyConnection` (see
+`01-architecture.md`) to confirm the token is live and the posting scope was
+actually granted; only then write an `Account` record (see
+`02-data-model.md`, including `verifiedAt`) to secure storage, navigate back
+to `ConnectionsScreen`, and show the checkmark.
+
+A sign-in that fails verification is **not** stored and **never** shows a
+checkmark — the user sees the platform's own reason (e.g. "signed you in but
+did not grant permission to upload videos") and can run the flow again. The
+checkmark is the app's promise that this account can be posted to, so it is
+never shown on the strength of a completed browser flow alone.
 
 ## No server hop needed (PKCE, public client)
 

@@ -1,5 +1,6 @@
 export type {
   Account,
+  ConnectionVerification,
   FetchLike,
   MediaFile,
   MediaReader,
@@ -14,5 +15,5 @@ export type {
 export { PLATFORMS, PLATFORM_LABELS, isPlatform } from './platforms';
 export { PlatformRejectedError, ReconnectRequiredError, UnsupportedMediaError } from './errors';
 export { createFetchMediaReader } from './media';
-export { createYouTubeAdapter } from './adapters/youtube';
+export { createYouTubeAdapter, YOUTUBE_UPLOAD_SCOPE } from './adapters/youtube';
 export type { YouTubeAdapterConfig } from './adapters/youtube';
