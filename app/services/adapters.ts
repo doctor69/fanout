@@ -1,5 +1,11 @@
 import type { MediaReader, Platform, PlatformAdapter } from '@fanout/core-posting';
-import { createTikTokAdapter, createXAdapter, createYouTubeAdapter } from '@fanout/core-posting';
+import {
+  createLinkedInAdapter,
+  createMetaAdapter,
+  createTikTokAdapter,
+  createXAdapter,
+  createYouTubeAdapter,
+} from '@fanout/core-posting';
 
 import { GOOGLE_CLIENT_ID, X_CLIENT_ID } from '../config';
 import { refreshOnServer } from './oauth/tokenExchange';
@@ -27,6 +33,20 @@ export function createAdapters(readMedia?: MediaReader): AdapterRegistry {
     tiktok: createTikTokAdapter({
       // TikTok can't refresh on-device: its token endpoint needs the secret.
       refreshViaServer: refreshOnServer('tiktok'),
+      ...(readMedia ? { readMedia } : {}),
+    }),
+    facebook: createMetaAdapter({
+      platform: 'facebook',
+      refreshViaServer: refreshOnServer('facebook'),
+      ...(readMedia ? { readMedia } : {}),
+    }),
+    instagram: createMetaAdapter({
+      platform: 'instagram',
+      refreshViaServer: refreshOnServer('instagram'),
+      ...(readMedia ? { readMedia } : {}),
+    }),
+    linkedin: createLinkedInAdapter({
+      refreshViaServer: refreshOnServer('linkedin'),
       ...(readMedia ? { readMedia } : {}),
     }),
   };

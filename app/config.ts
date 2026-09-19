@@ -12,6 +12,9 @@ export const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? '';
 export const X_CLIENT_ID = process.env.EXPO_PUBLIC_X_CLIENT_ID ?? '';
 export const TIKTOK_CLIENT_KEY = process.env.EXPO_PUBLIC_TIKTOK_CLIENT_KEY ?? '';
 
+export const META_APP_ID = process.env.EXPO_PUBLIC_META_APP_ID ?? '';
+export const LINKEDIN_CLIENT_ID = process.env.EXPO_PUBLIC_LINKEDIN_CLIENT_ID ?? '';
+
 /**
  * Base URL of the deployed /functions/token-exchange Worker. Public by design:
  * it holds the secrets so the app doesn't have to.
@@ -56,5 +59,17 @@ export function requireTokenExchangeUrl(): string {
     TOKEN_EXCHANGE_URL,
     'EXPO_PUBLIC_TOKEN_EXCHANGE_URL',
     'the URL of your deployed token-exchange function',
+  );
+}
+
+export function requireMetaAppId(): string {
+  return required(META_APP_ID, 'EXPO_PUBLIC_META_APP_ID', 'your Meta app id');
+}
+
+export function requireLinkedInClientId(): string {
+  return required(
+    LINKEDIN_CLIENT_ID,
+    'EXPO_PUBLIC_LINKEDIN_CLIENT_ID',
+    'your LinkedIn app client id',
   );
 }

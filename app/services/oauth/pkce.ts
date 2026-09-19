@@ -14,6 +14,12 @@ export interface PkceFlowOptions {
   /** Path appended to the app scheme, e.g. 'oauth/youtube'. */
   redirectPath: string;
   extraParams?: Record<string, string>;
+  /**
+   * Defaults to true. Platforms that exchange the code with a client secret on
+   * the server (Meta, LinkedIn) turn it off: sending a code_challenge and then
+   * exchanging without the verifier is how you get a rejected code.
+   */
+  usePKCE?: boolean;
 }
 
 export interface PkceFlowResult {
@@ -48,7 +54,7 @@ export async function runAuthorizationRequest(
     clientId: options.clientId,
     redirectUri,
     scopes: options.scopes,
-    usePKCE: true,
+    usePKCE: options.usePKCE ?? true,
     ...(options.extraParams ? { extraParams: options.extraParams } : {}),
   });
 

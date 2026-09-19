@@ -123,21 +123,46 @@ before tackling platforms that need the serverless function.
 ## Phase 6 — Instagram + Facebook (Meta Graph API)
 
 - [ ] Register Meta app, set up a test Facebook Page + linked Instagram
-      Business/Creator account for development.
-- [ ] Implement connect flow: app gets auth code → sends to
+      Business/Creator account for development. **Doctor's step.** Add
+      `fanout:/oauth/facebook` and `fanout:/oauth/instagram` to the app's
+      Valid OAuth Redirect URIs, put the app id in `app/.env` and the app
+      secret on the function.
+- [x] Implement connect flow: app gets auth code → sends to
       `/functions/token-exchange` → receives tokens → stores via
-      `SecureStoreTokenStore`.
-- [ ] Implement `instagramAdapter` and `facebookAdapter`.
-- [ ] Add both to Connections/Composer screens.
+      `SecureStoreTokenStore`. *(The function also trades the short-lived
+      token for a long-lived one. What's stored is the Page access token,
+      which posts, plus the long-lived user token, which is the only thing a
+      new Page token can be derived from.)*
+- [x] Implement `instagramAdapter` and `facebookAdapter`. *(One factory:
+      they share an app, a token endpoint and a Page, and differ only in how
+      they post.)*
+- [x] Add both to Connections/Composer screens.
 - [ ] Flag to Doctor: Meta App Review needed before this works for real
-      end users beyond test accounts — manual step.
+      end users beyond test accounts — manual step. **Flagged.**
+- [ ] Two things for the manual pass:
+      (a) Instagram photo posts accept only a public `image_url` — there is
+      no binary path — so the adapter refuses photos with a clear reason and
+      posts videos as Reels via the resumable endpoint. Same constraint as
+      TikTok photos; worth one product decision covering both.
+      (b) Meta has historically wanted https redirect URIs for the web OAuth
+      dialog. If it refuses `fanout:/oauth/...`, the fix is a bridge route on
+      the token-exchange Worker that 302s back to the app scheme.
+- [ ] v1 connects the first eligible Page. Someone who manages several Pages
+      has no way to choose — a picker isn't in the specs, so raise it before
+      it bites.
 
 ## Phase 7 — LinkedIn
 
-- [ ] Register LinkedIn developer app.
-- [ ] Same token-exchange-function pattern as Phase 6.
-- [ ] Implement `linkedinAdapter`.
-- [ ] Add to Connections/Composer screens — all 6 platforms now present.
+- [ ] Register LinkedIn developer app. **Doctor's step.** Needs the "Share on
+      LinkedIn" and "Sign In with LinkedIn using OpenID Connect" products,
+      with `fanout:/oauth/linkedin` as an authorized redirect URL.
+- [x] Same token-exchange-function pattern as Phase 6.
+- [x] Implement `linkedinAdapter`. *(Images and videos both upload as binary:
+      images in one PUT, videos part by part with the ETags returned on
+      finalize. The `LinkedIn-Version` header is configurable because
+      LinkedIn's versions age out after about a year — bump it with the rest
+      of the dependency housekeeping.)*
+- [x] Add to Connections/Composer screens — all 6 platforms now present.
 
 ## Phase 8 — Hardening
 

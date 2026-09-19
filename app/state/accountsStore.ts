@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { adapterFor } from '../services/adapters';
 import { secureStoreTokenStore } from '../services/secureStoreTokenStore';
+import { connectLinkedIn } from '../services/oauth/linkedin';
+import { connectFacebook, connectInstagram } from '../services/oauth/meta';
 import { connectTikTok } from '../services/oauth/tiktok';
 import { connectX } from '../services/oauth/x';
 import { connectYouTube } from '../services/oauth/youtube';
@@ -28,6 +30,9 @@ const CONNECT_FLOWS: Partial<Record<Platform, ConnectFlow>> = {
   youtube: connectYouTube,
   x: connectX,
   tiktok: connectTikTok,
+  facebook: connectFacebook,
+  instagram: connectInstagram,
+  linkedin: connectLinkedIn,
 };
 
 export function isConnectSupported(platform: Platform): boolean {
