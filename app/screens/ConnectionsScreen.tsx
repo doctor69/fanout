@@ -1,5 +1,6 @@
 import type { Account, Platform } from '@fanout/core-posting';
 import { PLATFORMS, PLATFORM_LABELS } from '@fanout/core-posting';
+import { type RouteProp, useRoute } from '@react-navigation/native';
 import {
   ActivityIndicator,
   Alert,
@@ -10,6 +11,7 @@ import {
   View,
 } from 'react-native';
 
+import type { RootStackParamList } from '../navigation';
 import { type ConnectPhase, isConnectSupported, isVerified, useAccounts } from '../state/accountsStore';
 
 /**
@@ -41,12 +43,14 @@ const PHASE_LABELS: Record<ConnectPhase, string> = {
 interface RowProps {
   platform: Platform;
   account: Account | undefined;
+  /** Highlighted because the composer sent the user here to fix this one. */
+  highlighted?: boolean;
   phase: ConnectPhase | null;
   onConnect: () => void;
   onDisconnect: () => void;
 }
 
-function ConnectionRow({ platform, account, phase, onConnect, onDisconnect }: RowProps) {
+function ConnectionRow({ platform, account, phase, highlighted, onConnect, onDisconnect }: RowProps) {
   const label = PLATFORM_LABELS[platform];
   const busy = phase !== null;
   // Verified is the only state that counts as connected in the UI.
@@ -78,7 +82,11 @@ function ConnectionRow({ platform, account, phase, onConnect, onDisconnect }: Ro
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+      style={({ pressed }) => [
+        styles.row,
+        highlighted && styles.rowHighlighted,
+        pressed && styles.rowPressed,
+      ]}
       onPress={handlePress}
       accessibilityRole="button"
       accessibilityLabel={
@@ -127,6 +135,8 @@ function ConnectionRow({ platform, account, phase, onConnect, onDisconnect }: Ro
 
 export default function ConnectionsScreen() {
   const { accounts, loading, busy, error, connect, disconnect } = useAccounts();
+  const route = useRoute<RouteProp<RootStackParamList, 'Connections'>>();
+  const reconnect = route.params?.reconnect;
   const byPlatform = new Map(accounts.map((account) => [account.platform, account]));
 
   return (
@@ -135,6 +145,12 @@ export default function ConnectionsScreen() {
       <Text style={styles.subheading}>
         Connect an account once. Every post fans out to all of them, unless you opt one out.
       </Text>
+
+      {reconnect ? (
+        <Text style={styles.notice}>
+          {PLATFORM_LABELS[reconnect]} needs reconnecting before it can be posted to again.
+        </Text>
+      ) : null}
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -148,6 +164,7 @@ export default function ConnectionsScreen() {
               platform={platform}
               account={byPlatform.get(platform)}
               phase={busy?.platform === platform ? busy.phase : null}
+              highlighted={reconnect === platform}
               onConnect={() => void connect(platform)}
               onDisconnect={() => void disconnect(platform)}
             />
@@ -181,6 +198,15 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e2e2e2',
   },
   rowPressed: { backgroundColor: '#f0f0f0' },
+  rowHighlighted: { backgroundColor: '#fff6e5' },
+  notice: {
+    fontSize: 14,
+    color: '#7a4b00',
+    backgroundColor: '#fff6e5',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
   glyph: {
     width: 36,
     height: 36,

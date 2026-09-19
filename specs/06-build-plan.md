@@ -39,14 +39,15 @@ before tackling platforms that need the serverless function.
 
 ## Phase 2 — Composer + fan-out logic (still YouTube-only target)
 
-- [ ] Build `ComposerScreen`: media picker, caption field, platform chip row
+- [x] Build `ComposerScreen`: media picker, caption field, platform chip row
       (only YouTube will appear as a chip at this point).
-- [ ] Implement `fanOutPost` in `/packages/core-posting` exactly per the
+- [x] Implement `fanOutPost` in `/packages/core-posting` exactly per the
       pseudocode in `01-architecture.md`.
-- [ ] Wire the Post button to `fanOutPost`, show per-platform result state
+- [x] Wire the Post button to `fanOutPost`, show per-platform result state
       per `04-posting-flow.md`.
 - [ ] Manually verify: post a real short video, see it land on YouTube,
-      see success state in-app.
+      see success state in-app. **Blocked on Doctor:** same credentials and
+      dev build as Phase 1's manual check.
 
 ## Phase 3 — Remaining PKCE/no-server platforms (X)
 

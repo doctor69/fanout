@@ -17,3 +17,5 @@ export { PlatformRejectedError, ReconnectRequiredError, UnsupportedMediaError } 
 export { createFetchMediaReader } from './media';
 export { createYouTubeAdapter, YOUTUBE_UPLOAD_SCOPE } from './adapters/youtube';
 export type { YouTubeAdapterConfig } from './adapters/youtube';
+export { fanOutPost } from './orchestrator';
+export type { FanOutOptions } from './orchestrator';
