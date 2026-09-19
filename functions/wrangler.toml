@@ -1,0 +1,10 @@
+# Cloudflare Worker. Chosen over a Vercel Edge Function for the simpler local
+# story: `wrangler dev` runs the real runtime with no account needed, and the
+# free tier covers v1's volume many times over.
+#
+# Secrets are NEVER in this file. Locally they live in .dev.vars (gitignored);
+# in production they're set with `wrangler secret put <NAME>`, which stores
+# them on the Worker and nowhere else.
+name = "fanout-token-exchange"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"

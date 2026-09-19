@@ -1,0 +1,19 @@
+{
+  "name": "@fanout/token-exchange",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The one serverless function v1 needs: OAuth code/refresh exchange for the platforms whose client secret can't ship in the app (specs/03-auth-and-oauth.md).",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test \"dist/**/*.test.js\"",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "~6.0.3"
+  }
+}

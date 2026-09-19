@@ -81,6 +81,20 @@ export interface MediaFile {
 
 export type MediaReader = (content: PostContent) => Promise<MediaFile>;
 
+/**
+ * What the token-exchange function hands back for the platforms whose refresh
+ * needs a client secret (specs/03-auth-and-oauth.md). The adapter asks for one
+ * of these rather than knowing the function's URL, so v2 can supply its own.
+ */
+export interface ServerTokenSet {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt: number;
+  grantedScopes?: string[];
+}
+
+export type ServerTokenRefresher = (account: Account) => Promise<ServerTokenSet>;
+
 /** Injectable fetch so adapters stay testable in plain Node. */
 export type FetchLike = typeof globalThis.fetch;
 

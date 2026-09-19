@@ -22,3 +22,7 @@ expo-env.d.ts
 # os / editor
 .DS_Store
 *.log
+
+# wrangler local secrets and state
+.dev.vars
+.wrangler/

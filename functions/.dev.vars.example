@@ -1,0 +1,17 @@
+# Copy to .dev.vars for `wrangler dev`. NEVER commit the real file.
+# In production set each of these with: wrangler secret put <NAME>
+#
+# These secrets exist here precisely so they never enter the app bundle
+# (CLAUDE.md, specs/03-auth-and-oauth.md).
+
+# TikTok — from the TikTok developer portal. Note: "client key", not client id.
+TIKTOK_CLIENT_KEY=
+TIKTOK_CLIENT_SECRET=
+
+# Meta — one app serves both Facebook and Instagram.
+META_APP_ID=
+META_APP_SECRET=
+
+# LinkedIn
+LINKEDIN_CLIENT_ID=
+LINKEDIN_CLIENT_SECRET=

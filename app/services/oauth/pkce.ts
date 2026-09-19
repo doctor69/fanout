@@ -26,8 +26,22 @@ export function redirectUriFor(path: string): string {
   return AuthSession.makeRedirectUri({ scheme: 'fanout', path });
 }
 
-/** Resolves null when the user dismissed or cancelled the browser. */
-export async function runPkceFlow(options: PkceFlowOptions): Promise<PkceFlowResult | null> {
+export interface AuthorizationResult {
+  code: string;
+  codeVerifier?: string;
+  redirectUri: string;
+}
+
+/**
+ * The browser half of the flow, stopping at the authorization code.
+ *
+ * Platforms whose token exchange needs a client secret stop here and send the
+ * code to /functions/token-exchange instead of exchanging it on-device.
+ * Resolves null when the user dismissed or cancelled the browser.
+ */
+export async function runAuthorizationRequest(
+  options: PkceFlowOptions,
+): Promise<AuthorizationResult | null> {
   const redirectUri = redirectUriFor(options.redirectPath);
 
   const request = new AuthSession.AuthRequest({
@@ -50,12 +64,26 @@ export async function runPkceFlow(options: PkceFlowOptions): Promise<PkceFlowRes
     throw new Error('Sign-in did not return an authorization code.');
   }
 
+  return {
+    code: result.params.code,
+    ...(request.codeVerifier ? { codeVerifier: request.codeVerifier } : {}),
+    redirectUri,
+  };
+}
+
+/** Resolves null when the user dismissed or cancelled the browser. */
+export async function runPkceFlow(options: PkceFlowOptions): Promise<PkceFlowResult | null> {
+  const authorization = await runAuthorizationRequest(options);
+  if (!authorization) return null;
+
   const token = await AuthSession.exchangeCodeAsync(
     {
       clientId: options.clientId,
-      code: result.params.code,
-      redirectUri,
-      extraParams: request.codeVerifier ? { code_verifier: request.codeVerifier } : {},
+      code: authorization.code,
+      redirectUri: authorization.redirectUri,
+      extraParams: authorization.codeVerifier
+        ? { code_verifier: authorization.codeVerifier }
+        : {},
     },
     options.discovery,
   );

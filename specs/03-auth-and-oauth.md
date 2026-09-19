@@ -26,9 +26,13 @@ never shown on the strength of a completed browser flow alone.
   `tweet.write`, `users.read`, `media.write` (or current equivalents —
   confirm against X's developer docs at implementation time, this changes).
 
-## Confirm before building — may or may not need a server hop
+## Needs a server hop — confirmed in Phase 4
 
-- **TikTok** — Login Kit supports PKCE for mobile apps. The Content Posting
+- **TikTok** — Login Kit supports PKCE for mobile apps, **but the token
+  exchange still requires the client secret**, which TikTok's own guidance
+  says must stay server-side. This was the open question below; the answer is
+  that TikTok goes through `/functions/token-exchange` like Meta and LinkedIn.
+  Note its public identifier is called a *client key*, not a client id. The Content Posting
   API itself is free, but a new app posts as **private-only until it passes
   TikTok's app audit** (submission requires a privacy policy URL and a demo
   video of the full OAuth + upload flow; approval typically takes one to two
@@ -50,11 +54,21 @@ Cloudflare Worker or Vercel Edge Function, free tier) does only this:
 
 ```
 POST /token-exchange
-body: { platform: 'instagram' | 'facebook' | 'linkedin', code: string, codeVerifier?: string }
+body: { platform: 'tiktok' | 'instagram' | 'facebook' | 'linkedin',
+        code: string, codeVerifier?: string, redirectUri: string }
 → exchanges code for access/refresh token using the platform's client secret
   (stored as an environment variable on the function, never in the app)
-→ returns { accessToken, refreshToken?, expiresAt }
+→ returns { accessToken, refreshToken?, expiresAt, grantedScopes?, externalUserId? }
+
+POST /token-refresh
+body: { platform, refreshToken }
+→ same response shape; used for the silent refresh before posting, since
+  these platforms can't refresh on-device either
 ```
+
+Meta is the exception to the refresh shape: it issues no refresh token, so a
+long-lived token is re-exchanged for a new one while still valid. The app
+sends its current access token as `refreshToken` for that call.
 
 The app calls this function only during the initial connect and during token
 refresh for these two platforms; the actual `publish()` calls in the

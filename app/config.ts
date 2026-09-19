@@ -10,6 +10,13 @@
 
 export const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? '';
 export const X_CLIENT_ID = process.env.EXPO_PUBLIC_X_CLIENT_ID ?? '';
+export const TIKTOK_CLIENT_KEY = process.env.EXPO_PUBLIC_TIKTOK_CLIENT_KEY ?? '';
+
+/**
+ * Base URL of the deployed /functions/token-exchange Worker. Public by design:
+ * it holds the secrets so the app doesn't have to.
+ */
+export const TOKEN_EXCHANGE_URL = process.env.EXPO_PUBLIC_TOKEN_EXCHANGE_URL ?? '';
 
 function required(value: string, name: string, detail: string): string {
   if (!value) {
@@ -33,5 +40,21 @@ export function requireXClientId(): string {
     X_CLIENT_ID,
     'EXPO_PUBLIC_X_CLIENT_ID',
     "your X app's OAuth 2.0 client id (native app / public client)",
+  );
+}
+
+export function requireTikTokClientKey(): string {
+  return required(
+    TIKTOK_CLIENT_KEY,
+    'EXPO_PUBLIC_TIKTOK_CLIENT_KEY',
+    "your TikTok app's client key",
+  );
+}
+
+export function requireTokenExchangeUrl(): string {
+  return required(
+    TOKEN_EXCHANGE_URL,
+    'EXPO_PUBLIC_TOKEN_EXCHANGE_URL',
+    'the URL of your deployed token-exchange function',
   );
 }

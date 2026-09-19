@@ -4,6 +4,8 @@ export type {
   FetchLike,
   MediaFile,
   MediaReader,
+  ServerTokenRefresher,
+  ServerTokenSet,
   PlatformAdapter,
   Platform,
   PostAttempt,
@@ -17,6 +19,8 @@ export { PlatformRejectedError, ReconnectRequiredError, UnsupportedMediaError } 
 export { createFetchMediaReader } from './media';
 export { createYouTubeAdapter, YOUTUBE_UPLOAD_SCOPE } from './adapters/youtube';
 export { createXAdapter, X_SCOPES, X_POSTING_SCOPES } from './adapters/x';
+export { createTikTokAdapter, TIKTOK_SCOPES, TIKTOK_POSTING_SCOPE } from './adapters/tiktok';
+export type { TikTokAdapterConfig } from './adapters/tiktok';
 export type { XAdapterConfig } from './adapters/x';
 export { buildMultipartBody } from './multipart';
 export type { YouTubeAdapterConfig } from './adapters/youtube';

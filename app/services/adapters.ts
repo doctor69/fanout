@@ -1,7 +1,8 @@
 import type { MediaReader, Platform, PlatformAdapter } from '@fanout/core-posting';
-import { createXAdapter, createYouTubeAdapter } from '@fanout/core-posting';
+import { createTikTokAdapter, createXAdapter, createYouTubeAdapter } from '@fanout/core-posting';
 
 import { GOOGLE_CLIENT_ID, X_CLIENT_ID } from '../config';
+import { refreshOnServer } from './oauth/tokenExchange';
 
 export type AdapterRegistry = Partial<Record<Platform, PlatformAdapter>>;
 
@@ -21,6 +22,11 @@ export function createAdapters(readMedia?: MediaReader): AdapterRegistry {
     }),
     x: createXAdapter({
       clientId: X_CLIENT_ID,
+      ...(readMedia ? { readMedia } : {}),
+    }),
+    tiktok: createTikTokAdapter({
+      // TikTok can't refresh on-device: its token endpoint needs the secret.
+      refreshViaServer: refreshOnServer('tiktok'),
       ...(readMedia ? { readMedia } : {}),
     }),
   };

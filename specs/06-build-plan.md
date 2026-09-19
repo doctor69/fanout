@@ -72,24 +72,53 @@ before tackling platforms that need the serverless function.
 
 ## Phase 4 — TikTok
 
-- [ ] Register a TikTok developer app, confirm current mobile PKCE
+**Built after Phase 5, not before it** — see the first item.
+
+- [x] Register a TikTok developer app, confirm current mobile PKCE
       requirements for Login Kit (flag to Doctor if a server hop turns out
       to be required — see open question in `03-auth-and-oauth.md`).
-- [ ] Implement `tiktokAdapter` against the sandbox first (posts will be
-      private-only pre-audit — this is expected, not a bug).
-- [ ] Add to Connections/Composer screens.
+      **Answer: a server hop IS required.** TikTok uses PKCE for native
+      apps, but still requires the client secret on the token exchange, and
+      its own docs say that secret must stay server-side. So TikTok joins
+      Meta and LinkedIn on `/functions/token-exchange`, and Phase 5 was
+      built first. *(Registering the developer app itself is Doctor's step:
+      set the redirect URI to `fanout:/oauth/tiktok`, add Login Kit and the
+      Content Posting API with the `video.publish` scope, then put the
+      client key in `app/.env` and the client secret on the function.)*
+- [x] Implement `tiktokAdapter` against the sandbox first (posts will be
+      private-only pre-audit — this is expected, not a bug). *(The adapter
+      asks TikTok which privacy levels the creator may use and takes the
+      most public one offered, so an unaudited app posts SELF_ONLY and the
+      same code posts publicly once the audit passes — no code change.)*
+- [x] Add to Connections/Composer screens.
 - [ ] Flag to Doctor: app audit submission needed before TikTok posts can be
       public (requires privacy policy URL + demo video — manual step, not
-      something Claude Code can do alone).
+      something Claude Code can do alone). **Flagged — still Doctor's to do.**
+- [ ] Note for the manual pass: TikTok photo posts accept only
+      `PULL_FROM_URL`, i.e. a publicly reachable image URL, which an
+      on-device file isn't. The adapter returns a clear "videos only" failure
+      for photos rather than attempting the call. Posting photos to TikTok
+      would need somewhere to host the image first — worth a product decision
+      before Phase 8.
 
 ## Phase 5 — Serverless token-exchange function
 
-- [ ] Set up `/functions/token-exchange` (Cloudflare Worker or Vercel Edge
+- [x] Set up `/functions/token-exchange` (Cloudflare Worker or Vercel Edge
       Function — pick whichever has simpler local dev/deploy for this repo).
+      *(Cloudflare Worker: `wrangler dev` runs the real runtime locally with
+      no account needed. Handles TikTok, Instagram, Facebook and LinkedIn,
+      with both a `/token-exchange` and a `/token-refresh` route, since
+      specs/03 routes refresh through the function too.)*
 - [ ] Deploy to the platform's free tier; confirm it's reachable from the
-      Expo app in dev.
-- [ ] Store Meta and LinkedIn client secrets as environment variables on the
+      Expo app in dev. **Blocked on Doctor:** needs a Cloudflare account.
+      `npm run deploy --workspace=@fanout/token-exchange`, then put the
+      resulting URL in `app/.env` as `EXPO_PUBLIC_TOKEN_EXCHANGE_URL`.
+- [x] Store Meta and LinkedIn client secrets as environment variables on the
       function only — never commit them, never reference them from `/app`.
+      *(Plus TikTok's, per the Phase 4 finding. `.dev.vars` for local dev is
+      gitignored; production uses `wrangler secret put`. The function names a
+      missing variable in its error but never echoes a value, and logs
+      neither.)*
 
 ## Phase 6 — Instagram + Facebook (Meta Graph API)
 
