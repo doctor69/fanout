@@ -215,6 +215,12 @@ before tackling platforms that need the serverless function.
       artifacts and the SDK platform, so no local Gradle build can resolve
       anything. Build via EAS, or locally on a machine with the SDK.
 
+      Maven Central is reachable but is not a way around it, so don't spend
+      time there: its `com.android.tools.build:gradle` mirror stops at 2.3.0
+      (2017) and we need 8.x, and every `androidx.*` artifact, `aapt2` and
+      `r8` return 404. The fix is either EAS or allowing `dl.google.com` in
+      the environment's network policy — that one host unblocks all three.
+
 ## Phase 9 — iOS port verification
 
 - [ ] Full pass on iOS simulator/device: OAuth redirect URIs, secure store,
