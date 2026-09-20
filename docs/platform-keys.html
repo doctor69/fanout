@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<title>Fanout Platform Keys</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #f5f7f9;
+    --surface: #ffffff;
+    --surface-sunk: #eef1f5;
+    --ink: #161b21;
+    --ink-soft: #5c6675;
+    --ink-faint: #8b95a4;
+    --line: #dde3ea;
+    --line-strong: #c3ccd7;
+    --accent: #0d7d72;
+    --accent-soft: #e2f1ef;
+    --accent-ink: #0a5f57;
+    --ready: #15803d;
+    --ready-soft: #e4f3e9;
+    --gated: #a16207;
+    --gated-soft: #fbf0dc;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --display: "Archivo", system-ui, sans-serif;
+    --body: "Source Sans 3", system-ui, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101418;
+      --surface: #191f26;
+      --surface-sunk: #141a20;
+      --ink: #e7ecf2;
+      --ink-soft: #a0abb9;
+      --ink-faint: #76818f;
+      --line: #2a323b;
+      --line-strong: #3a444f;
+      --accent: #3fb3a5;
+      --accent-soft: #10312e;
+      --accent-ink: #6fd0c3;
+      --ready: #4ade80;
+      --ready-soft: #10281a;
+      --gated: #e0b155;
+      --gated-soft: #2b2313;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #101418;
+    --surface: #191f26;
+    --surface-sunk: #141a20;
+    --ink: #e7ecf2;
+    --ink-soft: #a0abb9;
+    --ink-faint: #76818f;
+    --line: #2a323b;
+    --line-strong: #3a444f;
+    --accent: #3fb3a5;
+    --accent-soft: #10312e;
+    --accent-ink: #6fd0c3;
+    --ready: #4ade80;
+    --ready-soft: #10281a;
+    --gated: #e0b155;
+    --gated-soft: #2b2313;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 40px 72px;
+  }
+
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(30px, 6vw, 42px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+  h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  h3 { font-size: 15px; font-weight: 600; }
+  p { margin: 0; }
+
+  .lede { color: var(--ink-soft); font-size: 17px; margin-top: 12px; max-width: 60ch; }
+
+  .eyebrow {
+    font-family: var(--display);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+  }
+
+  /* ---- progress strip ---- */
+  .status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-top: 28px;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .status-count {
+    font-family: var(--display);
+    font-size: 26px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .status-label { color: var(--ink-soft); font-size: 14px; }
+  .meter {
+    flex: 1 1 180px;
+    height: 6px;
+    min-width: 140px;
+    background: var(--surface-sunk);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .meter-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .meter-fill { transition: none; }
+  }
+
+  /* ---- jump nav ---- */
+  .jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .jump a {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-decoration: none;
+    padding: 5px 11px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+  }
+  .jump a:hover { color: var(--accent-ink); border-color: var(--accent); }
+  .jump a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---- platform block ---- */
+  .platform {
+    margin-top: 28px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .platform.is-done { border-color: var(--ready); }
+
+  .platform-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .rank {
+    font-family: var(--display);
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+    width: 22px;
+    flex: none;
+    padding-top: 3px;
+  }
+  .platform-title { flex: 1 1 auto; min-width: 0; }
+  .platform-sub { color: var(--ink-soft); font-size: 14px; margin-top: 3px; }
+
+  .done-toggle {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+  }
+  .done-toggle input { width: 17px; height: 17px; accent-color: var(--ready); cursor: pointer; }
+  .platform.is-done .done-toggle { color: var(--ready); }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tag {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 3px 9px;
+    border-radius: 5px;
+    background: var(--surface-sunk);
+    color: var(--ink-soft);
+  }
+  .tag.ok { background: var(--ready-soft); color: var(--ready); }
+  .tag.wait { background: var(--gated-soft); color: var(--gated); }
+
+  .platform-body { padding: 4px 20px 20px; }
+
+  ol.steps { margin: 0; padding-left: 20px; }
+  ol.steps > li { margin-top: 14px; padding-left: 4px; }
+  ol.steps > li::marker { color: var(--ink-faint); font-weight: 600; font-family: var(--mono); font-size: 13px; }
+
+  a.link { color: var(--accent-ink); text-decoration-color: var(--line-strong); text-underline-offset: 2px; }
+  a.link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--surface-sunk);
+    padding: 1.5px 5px;
+    border-radius: 4px;
+    word-break: break-word;
+  }
+
+  /* ---- copyable block ---- */
+  .snip {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface-sunk);
+    overflow: hidden;
+  }
+  .snip pre {
+    margin: 0;
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--ink);
+    overflow-x: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .copy {
+    flex: none;
+    border: 0;
+    border-left: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: var(--display);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0 13px;
+    cursor: pointer;
+  }
+  .copy:hover { color: var(--accent-ink); background: var(--accent-soft); }
+  .copy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .copy.copied { color: var(--ready); }
+
+  /* ---- callout ---- */
+  .note {
+    margin-top: 12px;
+    padding: 11px 14px;
+    border-left: 3px solid var(--gated);
+    background: var(--gated-soft);
+    border-radius: 0 7px 7px 0;
+    font-size: 14.5px;
+  }
+  .note strong { font-family: var(--display); }
+  .note.tip { border-left-color: var(--accent); background: var(--accent-soft); }
+
+  /* ---- worker interlude ---- */
+  .interlude {
+    margin-top: 32px;
+    padding: 22px 20px;
+    border: 1px dashed var(--line-strong);
+    border-radius: 12px;
+    background: transparent;
+  }
+
+  .divider-note {
+    margin-top: 36px;
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    max-width: 62ch;
+  }
+
+  footer {
+    margin-top: 44px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-faint);
+    font-size: 13.5px;
+  }
+
+  @media (max-width: 480px) {
+    .platform-head { flex-wrap: wrap; }
+    .done-toggle { width: 100%; padding-left: 36px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Fanout setup</p>
+  <h1>Platform keys</h1>
+  <p class="lede">
+    Every platform needs your <em>app</em> registered before it will show a user a consent
+    screen. Six registrations, one per platform. Your users never see any of this.
+  </p>
+
+  <div class="status">
+    <span class="status-count"><span id="doneCount">0</span> / 6</span>
+    <span class="status-label">platforms registered</span>
+    <div class="meter" role="progressbar" aria-labelledby="doneCount" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0" id="meter">
+      <div class="meter-fill" id="meterFill"></div>
+    </div>
+  </div>
+
+  <nav class="jump" aria-label="Jump to platform">
+    <a href="#youtube">YouTube</a>
+    <a href="#x">X</a>
+    <a href="#worker">Worker</a>
+    <a href="#tiktok">TikTok</a>
+    <a href="#meta">Instagram + Facebook</a>
+    <a href="#linkedin">LinkedIn</a>
+    <a href="#envfile">.env</a>
+  </nav>
+
+  <!-- ============ YOUTUBE ============ -->
+  <section class="platform" id="youtube" data-key="youtube">
+    <div class="platform-head">
+      <span class="rank">01</span>
+      <div class="platform-title">
+        <h2>YouTube</h2>
+        <p class="platform-sub">Google Cloud Console · about 10 minutes</p>
+        <div class="tags">
+          <span class="tag ok">No server needed</span>
+          <span class="tag ok">No review</span>
+          <span class="tag">Video only</span>
+        </div>
+      </div>
+      <label class="done-toggle"><input type="checkbox" data-done="youtube"> Done</label>
+    </div>
+    <div class="platform-body">
+      <div class="note tip">
+        <strong>Start here.</strong> It's the only platform with nothing standing between you
+        and a real post — no secret, no server, no approval. If something is structurally
+        wrong, YouTube tells you in ten minutes instead of two weeks.
+      </div>
+
+      <ol class="steps">
+        <li>
+          Open <a class="link" href="https://console.cloud.google.com/" target="_blank" rel="noopener">console.cloud.google.com</a>
+          and create a project.
+        </li>
+        <li>
+          <strong>APIs &amp; Services → Library</strong> → search <em>YouTube Data API v3</em> → <strong>Enable</strong>.
+        </li>
+        <li>
+          <strong>OAuth consent screen</strong> → External. Add the scope:
+          <div class="snip">
+            <pre>https://www.googleapis.com/auth/youtube.upload</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+          <div class="note">
+            <strong>Add your own Google account under Test users.</strong> Skip this and sign-in
+            is refused while the app is unverified. It's the single most common stumble here.
+          </div>
+        </li>
+        <li>
+          Get the SHA-1 of your debug signing key — the next step asks for it:
+          <div class="snip">
+            <pre>keytool -list -v -keystore ~/.android/debug.keystore \
+  -alias androiddebugkey -storepass android -keypass android | grep SHA1</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+        </li>
+        <li>
+          <strong>Credentials → Create credentials → OAuth client ID</strong>, type
+          <strong>Android</strong>. Package name:
+          <div class="snip">
+            <pre>com.fanout.app</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+          Paste the SHA-1 from the previous step.
+        </li>
+        <li>
+          Open that client's <strong>Advanced Settings</strong> and enable the
+          <strong>custom URI scheme</strong> method.
+          <div class="note">
+            Google now disables custom URI schemes for new Android clients by default. Without
+            this, the redirect back to <code>fanout:/oauth/youtube</code> is rejected and the
+            browser hangs on a Google error page.
+          </div>
+        </li>
+        <li>
+          Copy the client ID — it ends in <code>.apps.googleusercontent.com</code> — into
+          <code>app/.env</code>:
+          <div class="snip">
+            <pre>EXPO_PUBLIC_GOOGLE_CLIENT_ID=</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+        </li>
+      </ol>
+
+      <div class="note">
+        <strong>For iOS later:</strong> Google issues a separate client ID per platform. An
+        Android client is bound to your package name and SHA-1 and won't work in the iOS
+        Simulator — you'll need a second, iOS-type client keyed to bundle ID
+        <code>com.fanout.app</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ X ============ -->
+  <section class="platform" id="x" data-key="x">
+    <div class="platform-head">
+      <span class="rank">02</span>
+      <div class="platform-title">
+        <h2>X</h2>
+        <p class="platform-sub">X developer portal · about 10 minutes</p>
+        <div class="tags">
+          <span class="tag ok">No server needed</span>
+          <span class="tag ok">No review</span>
+          <span class="tag">Video + photo</span>
+        </div>
+      </div>
+      <label class="done-toggle"><input type="checkbox" data-done="x"> Done</label>
+    </div>
+    <div class="platform-body">
+      <ol class="steps">
+        <li>
+          Open <a class="link" href="https://developer.x.com/en/portal/dashboard" target="_blank" rel="noopener">developer.x.com</a>
+          → create a project, then an app inside it.
+        </li>
+        <li>
+          In the app's <strong>User authentication settings</strong>, turn on <strong>OAuth 2.0</strong>
+          and set the type to <strong>Native App</strong> — that makes it a public client using
+          PKCE, with no secret to leak.
+        </li>
+        <li>
+          Callback URI:
+          <div class="snip">
+            <pre>fanout:/oauth/x</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+        </li>
+        <li>
+          App permissions: <strong>Read and write</strong>. Posting needs both
+          <code>tweet.write</code> and <code>media.write</code>; read-only silently fails later.
+        </li>
+        <li>
+          Copy the <strong>Client ID</strong> (not the API key) into <code>app/.env</code>:
+          <div class="snip">
+            <pre>EXPO_PUBLIC_X_CLIENT_ID=</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <p class="divider-note">
+    That's both of the platforms that work entirely from the phone. The remaining four all
+    demand a client <em>secret</em> to complete the token exchange, and a secret can never ship
+    inside an app — anyone can unzip an APK. So they share one small serverless function.
+    Deploy it once, then they all work.
+  </p>
+
+  <!-- ============ WORKER ============ -->
+  <section class="interlude" id="worker">
+    <p class="eyebrow">Shared prerequisite</p>
+    <h2 style="margin-top:6px">Deploy the token-exchange function</h2>
+    <p style="color:var(--ink-soft); font-size:15px; margin-top:8px">
+      A Cloudflare Worker that swaps an auth code for a token using the secret, and stores
+      nothing. Free tier covers this many times over. It is not a backend for the app — no
+      user data lives there.
+    </p>
+    <div class="snip">
+      <pre>cd functions
+npx wrangler login
+npx wrangler secret put TIKTOK_CLIENT_SECRET
+npx wrangler secret put META_APP_SECRET
+npx wrangler secret put LINKEDIN_CLIENT_SECRET
+npm run deploy</pre>
+      <button class="copy" type="button">Copy</button>
+    </div>
+    <p style="margin-top:12px; font-size:15px">Then put the deployed URL in <code>app/.env</code>:</p>
+    <div class="snip">
+      <pre>EXPO_PUBLIC_TOKEN_EXCHANGE_URL=https://fanout-token-exchange.&lt;you&gt;.workers.dev</pre>
+      <button class="copy" type="button">Copy</button>
+    </div>
+    <div class="note tip">
+      Add each secret as you register that platform below — you don't need all three up front.
+      <code>wrangler secret put</code> can be re-run any time.
+    </div>
+  </section>
+
+  <!-- ============ TIKTOK ============ -->
+  <section class="platform" id="tiktok" data-key="tiktok">
+    <div class="platform-head">
+      <span class="rank">03</span>
+      <div class="platform-title">
+        <h2>TikTok</h2>
+        <p class="platform-sub">TikTok for Developers · registration ~20 min, then a wait</p>
+        <div class="tags">
+          <span class="tag">Needs the Worker</span>
+          <span class="tag wait">App audit: 1–2 weeks</span>
+          <span class="tag">Video only</span>
+        </div>
+      </div>
+      <label class="done-toggle"><input type="checkbox" data-done="tiktok"> Done</label>
+    </div>
+    <div class="platform-body">
+      <ol class="steps">
+        <li>
+          Open <a class="link" href="https://developers.tiktok.com/" target="_blank" rel="noopener">developers.tiktok.com</a>,
+          register as a developer, and create an app.
+        </li>
+        <li>
+          Add both products: <strong>Login Kit</strong> and the <strong>Content Posting API</strong>.
+          Request the <code>video.publish</code> scope — without it the app signs in but cannot post.
+        </li>
+        <li>
+          Redirect URI:
+          <div class="snip">
+            <pre>fanout:/oauth/tiktok</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+        </li>
+        <li>
+          Copy the <strong>client key</strong> (TikTok's name for the public ID) into <code>app/.env</code>:
+          <div class="snip">
+            <pre>EXPO_PUBLIC_TIKTOK_CLIENT_KEY=</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+        </li>
+        <li>
+          Put the <strong>client secret</strong> on the Worker — never in <code>.env</code>:
+          <div class="snip">
+            <pre>cd functions &amp;&amp; npx wrangler secret put TIKTOK_CLIENT_SECRET</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+        </li>
+        <li>
+          Submit for <strong>app audit</strong> when you're ready to post publicly. It wants a
+          privacy policy URL and a demo video of the whole sign-in and upload flow.
+        </li>
+      </ol>
+      <div class="note">
+        <strong>Before the audit passes, posts are private-only.</strong> That's TikTok's rule for
+        unaudited apps, not a bug. Fanout already handles it: it asks TikTok which privacy levels
+        your account may use and takes the most public one offered — so the same code starts
+        posting publicly the day approval lands, with no change.
+      </div>
+      <div class="note">
+        <strong>Photos won't work here at all.</strong> TikTok photo posts accept only a publicly
+        hosted image URL, which a file on a phone isn't. Video posts are unaffected.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ META ============ -->
+  <section class="platform" id="meta" data-key="meta">
+    <div class="platform-head">
+      <span class="rank">04</span>
+      <div class="platform-title">
+        <h2>Instagram + Facebook</h2>
+        <p class="platform-sub">Meta for Developers · one app covers both</p>
+        <div class="tags">
+          <span class="tag">Needs the Worker</span>
+          <span class="tag wait">App Review</span>
+          <span class="tag wait">Needs a Facebook Page</span>
+        </div>
+      </div>
+      <label class="done-toggle"><input type="checkbox" data-done="meta"> Done</label>
+    </div>
+    <div class="platform-body">
+      <ol class="steps">
+        <li>
+          Open <a class="link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">developers.facebook.com</a>
+          → create an app of type <strong>Business</strong>.
+        </li>
+        <li>
+          You need a <strong>Facebook Page</strong> — Fanout posts to a Page, never to a personal
+          profile. For Instagram, a <strong>Business or Creator</strong> account linked to that
+          same Page.
+        </li>
+        <li>
+          Add <strong>Facebook Login</strong>, and under its settings add both redirect URIs:
+          <div class="snip">
+            <pre>fanout:/oauth/facebook
+fanout:/oauth/instagram</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+        </li>
+        <li>
+          Copy the <strong>App ID</strong> into <code>app/.env</code>:
+          <div class="snip">
+            <pre>EXPO_PUBLIC_META_APP_ID=</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+        </li>
+        <li>
+          Put the <strong>App Secret</strong> on the Worker:
+          <div class="snip">
+            <pre>cd functions &amp;&amp; npx wrangler secret put META_APP_SECRET</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+        </li>
+        <li>
+          Submit for <strong>App Review</strong> before real users can connect. Until then it
+          works only with accounts listed as testers on the app.
+        </li>
+      </ol>
+      <div class="note">
+        <strong>If Meta rejects the redirect:</strong> it has historically wanted https URLs for
+        the web OAuth dialog rather than a custom scheme. If <code>fanout:/oauth/facebook</code>
+        is refused, the fix is a small bridge route on the Worker you already deployed that
+        redirects back to the app scheme. Ask and it can be added.
+      </div>
+      <div class="note">
+        <strong>Instagram photos need a public URL</strong> — same constraint as TikTok. Instagram
+        video posts upload fine as Reels; Facebook takes both photos and video directly.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LINKEDIN ============ -->
+  <section class="platform" id="linkedin" data-key="linkedin">
+    <div class="platform-head">
+      <span class="rank">05</span>
+      <div class="platform-title">
+        <h2>LinkedIn</h2>
+        <p class="platform-sub">LinkedIn Developers · about 15 minutes</p>
+        <div class="tags">
+          <span class="tag">Needs the Worker</span>
+          <span class="tag wait">Company page required</span>
+          <span class="tag">Video + photo</span>
+        </div>
+      </div>
+      <label class="done-toggle"><input type="checkbox" data-done="linkedin"> Done</label>
+    </div>
+    <div class="platform-body">
+      <ol class="steps">
+        <li>
+          Open <a class="link" href="https://www.linkedin.com/developers/apps" target="_blank" rel="noopener">linkedin.com/developers</a>
+          → create an app. It must be associated with a LinkedIn company page — create a
+          throwaway one if you don't have it.
+        </li>
+        <li>
+          On the <strong>Products</strong> tab, request both
+          <strong>Sign In with LinkedIn using OpenID Connect</strong> and
+          <strong>Share on LinkedIn</strong>. Posting needs the second one.
+        </li>
+        <li>
+          Under <strong>Auth</strong>, add the redirect URL:
+          <div class="snip">
+            <pre>fanout:/oauth/linkedin</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+        </li>
+        <li>
+          Copy the <strong>Client ID</strong> into <code>app/.env</code>:
+          <div class="snip">
+            <pre>EXPO_PUBLIC_LINKEDIN_CLIENT_ID=</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+        </li>
+        <li>
+          Put the <strong>Client Secret</strong> on the Worker:
+          <div class="snip">
+            <pre>cd functions &amp;&amp; npx wrangler secret put LINKEDIN_CLIENT_SECRET</pre>
+            <button class="copy" type="button">Copy</button>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ ENV FILE ============ -->
+  <section class="platform" id="envfile">
+    <div class="platform-head">
+      <span class="rank">06</span>
+      <div class="platform-title">
+        <h2>The finished .env</h2>
+        <p class="platform-sub">app/.env — gitignored, never committed</p>
+      </div>
+    </div>
+    <div class="platform-body">
+      <p style="font-size:15px; color:var(--ink-soft); margin-top:10px">
+        Fill in only the platforms you've registered. Anything left blank shows as
+        <strong>Set up</strong> on that row in the app and is simply skipped — the others keep working.
+      </p>
+      <div class="snip">
+        <pre>EXPO_PUBLIC_GOOGLE_CLIENT_ID=
+EXPO_PUBLIC_X_CLIENT_ID=
+EXPO_PUBLIC_TIKTOK_CLIENT_KEY=
+EXPO_PUBLIC_META_APP_ID=
+EXPO_PUBLIC_LINKEDIN_CLIENT_ID=
+EXPO_PUBLIC_TOKEN_EXCHANGE_URL=</pre>
+        <button class="copy" type="button">Copy</button>
+      </div>
+      <div class="note tip">
+        <strong>Restart with a cleared cache after every change.</strong> Metro bakes these values
+        in at build time and will happily serve the old empty ones — you'll swear nothing happened.
+        <div class="snip" style="margin-top:10px">
+          <pre>cd app &amp;&amp; npx expo start --clear</pre>
+          <button class="copy" type="button">Copy</button>
+        </div>
+      </div>
+      <div class="note">
+        <strong>No secrets in this file, ever.</strong> Everything here ships inside the app bundle
+        where anyone can read it. That's fine — client IDs are public by design. Client
+        <em>secrets</em> go on the Worker via <code>wrangler secret put</code> and nowhere else.
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Progress ticks are stored in this browser only. Full written steps live in
+    <code>docs/connecting-accounts.md</code>; every variable is also documented in
+    <code>app/.env.example</code>.
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var STORE = "fanout-platform-keys-v1";
+    var boxes = Array.prototype.slice.call(document.querySelectorAll("[data-done]"));
+    var countEl = document.getElementById("doneCount");
+    var fillEl = document.getElementById("meterFill");
+    var meterEl = document.getElementById("meter");
+
+    function load() {
+      try {
+        return JSON.parse(localStorage.getItem(STORE) || "{}") || {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function save(state) {
+      try {
+        localStorage.setItem(STORE, JSON.stringify(state));
+      } catch (e) {
+        /* private window or blocked storage — the page still works, it just forgets */
+      }
+    }
+
+    function paint() {
+      var done = 0;
+      boxes.forEach(function (box) {
+        var section = box.closest(".platform");
+        if (section) section.classList.toggle("is-done", box.checked);
+        if (box.checked) done++;
+      });
+      countEl.textContent = String(done);
+      fillEl.style.width = (done / boxes.length) * 100 + "%";
+      meterEl.setAttribute("aria-valuenow", String(done));
+    }
+
+    var state = load();
+    boxes.forEach(function (box) {
+      box.checked = state[box.getAttribute("data-done")] === true;
+      box.addEventListener("change", function () {
+        var next = load();
+        next[box.getAttribute("data-done")] = box.checked;
+        save(next);
+        paint();
+      });
+    });
+    paint();
+
+    document.querySelectorAll(".copy").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var pre = btn.parentElement.querySelector("pre");
+        if (!pre) return;
+        var text = pre.textContent;
+        var done = function () {
+          btn.textContent = "Copied";
+          btn.classList.add("copied");
+          setTimeout(function () {
+            btn.textContent = "Copy";
+            btn.classList.remove("copied");
+          }, 1400);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, function () {
+            btn.textContent = "Select it";
+          });
+        } else {
+          btn.textContent = "Select it";
+        }
+      });
+    });
+  })();
+</script>
+</body>
+</html>
