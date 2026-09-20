@@ -4,7 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 
 /**
  * TokenStore backed by expo-secure-store: one entry per platform, keyed
- * `account:<platform>` (specs/02-data-model.md). Tokens are encrypted at rest
+ * `account_<platform>` (specs/02-data-model.md). Tokens are encrypted at rest
  * by the OS keystore/keychain and are never logged.
  *
  * `ownerId` is part of the TokenStore interface because v2 stores accounts per
@@ -13,7 +13,13 @@ import * as SecureStore from 'expo-secure-store';
  * keys exactly as specs/02 describes them.
  */
 
-const KEY_PREFIX = 'account:';
+/**
+ * Underscore, not the colon the spec originally called for: expo-secure-store
+ * only accepts alphanumerics, `.`, `-` and `_` in a key, and throws on
+ * anything else. A colon made every read and every save fail at runtime —
+ * caught the first time the app ran on a device.
+ */
+const KEY_PREFIX = 'account_';
 
 function keyFor(platform: Platform): string {
   return `${KEY_PREFIX}${platform}`;

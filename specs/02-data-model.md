@@ -18,7 +18,13 @@ per-API-key instead of per-device, but is out of scope for this repo — see
 | connectedAt     | number (epoch ms)    | for display only                                  |
 | verifiedAt      | number (epoch ms)    | last successful `verifyConnection`; only verified accounts are stored, so its presence is what earns the checkmark |
 
-Stored as one secure-store entry per platform, keyed `account:<platform>`.
+Stored as one secure-store entry per platform, keyed `account_<platform>`.
+
+Note the underscore. `expo-secure-store` keys may contain only alphanumerics,
+`.`, `-` and `_`; it throws `Invalid key provided to SecureStore` on anything
+else. This spec originally said `account:<platform>`, and that colon made every
+read and save fail — the Connections screen showed the error instead of the
+six rows. Found the first time the app ran on a device.
 The Connections screen reads all 6 possible keys and renders a checkmark for
 whichever resolve.
 
