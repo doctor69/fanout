@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 
+import { isConfigured, missingConfigFor } from '../config';
 import type { RootStackParamList } from '../navigation';
 import { type ConnectPhase, isConnectSupported, isVerified, useAccounts } from '../state/accountsStore';
 
@@ -55,6 +56,7 @@ function ConnectionRow({ platform, account, phase, highlighted, onConnect, onDis
   const busy = phase !== null;
   // Verified is the only state that counts as connected in the UI.
   const connected = isVerified(account);
+  const configured = isConfigured(platform);
 
   const confirmDisconnect = () => {
     Alert.alert(
@@ -71,10 +73,20 @@ function ConnectionRow({ platform, account, phase, highlighted, onConnect, onDis
     Alert.alert(`${label} isn't ready yet`, 'This platform arrives in a later build phase.');
   };
 
+  const notConfigured = () => {
+    Alert.alert(
+      `${label} isn't set up yet`,
+      `This build has no ${label} app registered, so there's nothing to sign in to yet.\n\n` +
+        `Set ${missingConfigFor(platform).join(' and ')} in app/.env, then restart with ` +
+        '--clear.\n\ndocs/connecting-accounts.md has the steps.',
+    );
+  };
+
   const handlePress = () => {
     if (busy) return;
     if (connected) return confirmDisconnect();
     if (!isConnectSupported(platform)) return notYet();
+    if (!configured) return notConfigured();
     // Covers both first connect and re-running the flow for an account that
     // was stored but never verified.
     onConnect();
@@ -115,6 +127,10 @@ function ConnectionRow({ platform, account, phase, highlighted, onConnect, onDis
           <Text style={styles.rowWarning} numberOfLines={1}>
             Not verified — connect again
           </Text>
+        ) : !configured ? (
+          <Text style={styles.rowMuted} numberOfLines={1}>
+            No {label} app registered yet
+          </Text>
         ) : null}
       </View>
 
@@ -124,9 +140,13 @@ function ConnectionRow({ platform, account, phase, highlighted, onConnect, onDis
         <Text style={styles.check} accessibilityLabel="connected">
           ✓
         </Text>
-      ) : (
+      ) : configured ? (
         <View style={styles.connectButton}>
           <Text style={styles.connectButtonText}>Connect</Text>
+        </View>
+      ) : (
+        <View style={styles.setupButton}>
+          <Text style={styles.setupButtonText}>Set up</Text>
         </View>
       )}
     </Pressable>
@@ -221,6 +241,7 @@ const styles = StyleSheet.create({
   rowTitle: { fontSize: 16, fontWeight: '600' },
   rowSubtitle: { fontSize: 13, color: '#666', marginTop: 2 },
   rowWarning: { fontSize: 13, color: '#b26a00', marginTop: 2 },
+  rowMuted: { fontSize: 13, color: '#999', marginTop: 2 },
   check: { fontSize: 20, color: '#1a8f3c', fontWeight: '700', paddingHorizontal: 6 },
   connectButton: {
     paddingVertical: 6,
@@ -229,4 +250,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#1f1f1f',
   },
   connectButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  setupButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  setupButtonText: { color: '#777', fontSize: 14, fontWeight: '600' },
 });

@@ -1,3 +1,5 @@
+import type { Platform } from '@fanout/core-posting';
+
 /**
  * Runtime configuration. EXPO_PUBLIC_* values are inlined at bundle time and
  * read from `.env` in development (see `.env.example`).
@@ -72,4 +74,41 @@ export function requireLinkedInClientId(): string {
     'EXPO_PUBLIC_LINKEDIN_CLIENT_ID',
     'your LinkedIn app client id',
   );
+}
+
+/** The four platforms whose token exchange needs a secret, so a server hop. */
+const NEEDS_TOKEN_EXCHANGE: Platform[] = ['tiktok', 'instagram', 'facebook', 'linkedin'];
+
+const CLIENT_ID_VARS: Record<Platform, [value: string, name: string]> = {
+  youtube: [GOOGLE_CLIENT_ID, 'EXPO_PUBLIC_GOOGLE_CLIENT_ID'],
+  x: [X_CLIENT_ID, 'EXPO_PUBLIC_X_CLIENT_ID'],
+  tiktok: [TIKTOK_CLIENT_KEY, 'EXPO_PUBLIC_TIKTOK_CLIENT_KEY'],
+  instagram: [META_APP_ID, 'EXPO_PUBLIC_META_APP_ID'],
+  facebook: [META_APP_ID, 'EXPO_PUBLIC_META_APP_ID'],
+  linkedin: [LINKEDIN_CLIENT_ID, 'EXPO_PUBLIC_LINKEDIN_CLIENT_ID'],
+};
+
+/**
+ * Which environment values a platform still needs before its connect flow can
+ * run at all. Empty means it's ready.
+ *
+ * A platform nobody has registered yet isn't an error — it's a platform this
+ * build wasn't set up for. The Connections screen uses this to say so calmly
+ * instead of throwing a red banner at someone (see docs/connecting-accounts.md).
+ */
+export function missingConfigFor(platform: Platform): string[] {
+  const missing: string[] = [];
+
+  const [value, name] = CLIENT_ID_VARS[platform];
+  if (!value) missing.push(name);
+
+  if (NEEDS_TOKEN_EXCHANGE.includes(platform) && !TOKEN_EXCHANGE_URL) {
+    missing.push('EXPO_PUBLIC_TOKEN_EXCHANGE_URL');
+  }
+
+  return missing;
+}
+
+export function isConfigured(platform: Platform): boolean {
+  return missingConfigFor(platform).length === 0;
 }
