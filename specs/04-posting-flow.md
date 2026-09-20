@@ -1,5 +1,27 @@
 # 04 — Posting Flow (UI Behavior)
 
+## Home screen (the feed)
+
+- The app opens here. A reverse-chronological list of past posts, each showing
+  the media, the caption, when it went out, and a chip per platform marked
+  success or failure — with the adapter's own error text under it when one
+  failed.
+- Capped at the most recent 50 posts (`specs/02-data-model.md`); a footer says
+  so once the cap is reached, rather than silently dropping history.
+- A video has no still to show without a thumbnailing library, and a picked
+  file's URI can stop resolving once the OS clears its cache. Both fall back to
+  a labelled tile rather than a broken image.
+- Empty state explains that posts will appear here; "New post" goes to the
+  composer, and "Accounts" in the header goes to Connections.
+
+## Theme
+
+The app follows the OS light/dark setting (`userInterfaceStyle: "automatic"`,
+with `expo-system-ui` installed so Android honours it). There is deliberately
+**no in-app theme switch** — one less setting to explain, and it matches how
+every other app on the phone behaves. All colour comes from `app/theme.ts`; no
+screen hardcodes a hex value.
+
 ## Connections screen
 
 - Fixed list of 6 rows: YouTube, TikTok, Instagram, Facebook, X, LinkedIn.
@@ -46,6 +68,9 @@
   a "Retry this platform" action that re-calls `fanOutPost` scoped to just
   that one platform — do not require retrying platforms that already
   succeeded.
+- When the fan-out resolves, write a `PostRecord` for the home feed. A retry
+  updates that same record rather than adding a second entry, so the feed shows
+  one post with its final per-platform outcome.
 
 ## Edge cases to handle explicitly
 

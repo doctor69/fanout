@@ -1,6 +1,7 @@
 import type { Account, Platform } from '@fanout/core-posting';
 import { PLATFORMS, PLATFORM_LABELS } from '@fanout/core-posting';
 import { type RouteProp, useRoute } from '@react-navigation/native';
+import { useMemo } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +14,7 @@ import {
 
 import { isConfigured, missingConfigFor } from '../config';
 import type { RootStackParamList } from '../navigation';
+import { useColors, type Colors } from '../theme';
 import { type ConnectPhase, isConnectSupported, isVerified, useAccounts } from '../state/accountsStore';
 
 /**
@@ -52,6 +54,7 @@ interface RowProps {
 }
 
 function ConnectionRow({ platform, account, phase, highlighted, onConnect, onDisconnect }: RowProps) {
+  const styles = useThemedStyles();
   const label = PLATFORM_LABELS[platform];
   const busy = phase !== null;
   // Verified is the only state that counts as connected in the UI.
@@ -154,6 +157,7 @@ function ConnectionRow({ platform, account, phase, highlighted, onConnect, onDis
 }
 
 export default function ConnectionsScreen() {
+  const styles = useThemedStyles();
   const { accounts, loading, busy, error, connect, disconnect } = useAccounts();
   const route = useRoute<RouteProp<RootStackParamList, 'Connections'>>();
   const reconnect = route.params?.reconnect;
@@ -195,34 +199,40 @@ export default function ConnectionsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 20, paddingTop: 8 },
-  heading: { fontSize: 28, fontWeight: '700', marginBottom: 4 },
-  subheading: { fontSize: 14, color: '#666', marginBottom: 20, lineHeight: 20 },
+function useThemedStyles() {
+  const colors = useColors();
+  return useMemo(() => createStyles(colors), [colors]);
+}
+
+function createStyles(c: Colors) {
+  return StyleSheet.create({
+  container: { padding: 20, paddingTop: 8, backgroundColor: c.ground, flexGrow: 1 },
+  heading: { fontSize: 28, fontWeight: '700', marginBottom: 4, color: c.text },
+  subheading: { fontSize: 14, color: c.textSoft, marginBottom: 20, lineHeight: 20 },
   error: {
     fontSize: 14,
-    color: '#b00020',
-    backgroundColor: '#fdecef',
+    color: c.danger,
+    backgroundColor: c.dangerSoft,
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
   loading: { marginTop: 32 },
-  list: { borderRadius: 12, overflow: 'hidden', backgroundColor: '#fafafa' },
+  list: { borderRadius: 12, overflow: 'hidden', backgroundColor: c.surface },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e2e2e2',
+    borderBottomColor: c.line,
   },
-  rowPressed: { backgroundColor: '#f0f0f0' },
-  rowHighlighted: { backgroundColor: '#fff6e5' },
+  rowPressed: { backgroundColor: c.sunk },
+  rowHighlighted: { backgroundColor: c.warningSoft },
   notice: {
     fontSize: 14,
-    color: '#7a4b00',
-    backgroundColor: '#fff6e5',
+    color: c.warning,
+    backgroundColor: c.warningSoft,
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
@@ -231,31 +241,32 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#e8e8e8',
+    backgroundColor: c.sunk,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
-  glyphText: { fontSize: 16, fontWeight: '600' },
+  glyphText: { fontSize: 16, fontWeight: '600', color: c.text },
   rowText: { flex: 1 },
-  rowTitle: { fontSize: 16, fontWeight: '600' },
-  rowSubtitle: { fontSize: 13, color: '#666', marginTop: 2 },
-  rowWarning: { fontSize: 13, color: '#b26a00', marginTop: 2 },
-  rowMuted: { fontSize: 13, color: '#999', marginTop: 2 },
-  check: { fontSize: 20, color: '#1a8f3c', fontWeight: '700', paddingHorizontal: 6 },
+  rowTitle: { fontSize: 16, fontWeight: '600', color: c.text },
+  rowSubtitle: { fontSize: 13, color: c.textSoft, marginTop: 2 },
+  rowWarning: { fontSize: 13, color: c.warning, marginTop: 2 },
+  rowMuted: { fontSize: 13, color: c.textFaint, marginTop: 2 },
+  check: { fontSize: 20, color: c.success, fontWeight: '700', paddingHorizontal: 6 },
   connectButton: {
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 16,
-    backgroundColor: '#1f1f1f',
+    backgroundColor: c.action,
   },
-  connectButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  connectButtonText: { color: c.onAction, fontSize: 14, fontWeight: '600' },
   setupButton: {
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: c.line,
   },
-  setupButtonText: { color: '#777', fontSize: 14, fontWeight: '600' },
-});
+  setupButtonText: { color: c.textSoft, fontSize: 14, fontWeight: '600' },
+  });
+}

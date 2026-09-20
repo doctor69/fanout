@@ -11,6 +11,7 @@
 import type { Platform } from '@fanout/core-posting';
 
 export type RootStackParamList = {
+  Home: undefined;
   Composer: undefined;
   Connections: { reconnect?: Platform } | undefined;
 };

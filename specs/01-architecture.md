@@ -152,7 +152,9 @@ token exists) — see `03-auth-and-oauth.md` for exact detail:
 
 ```
 /app
+  theme.ts                    -- light/dark palettes, chosen by the OS setting
   /screens
+    HomeScreen.tsx            -- feed of past posts and how each platform responded
     ConnectionsScreen.tsx     -- list of 6 platforms, connect/disconnect, checkmarks
     ComposerScreen.tsx        -- media + caption + per-post opt-out toggles + Post button
     PostResultScreen.tsx      -- per-platform success/fail summary after posting
@@ -160,6 +162,7 @@ token exists) — see `03-auth-and-oauth.md` for exact detail:
     accountsStore.ts          -- thin wrapper around core-posting's TokenStore for UI reads
   /services
     secureStoreTokenStore.ts  -- TokenStore implementation using expo-secure-store
+    postHistory.ts            -- capped post history behind the home feed (specs/02)
 ```
 
 Screens call into `/packages/core-posting` only through `accountsStore` and

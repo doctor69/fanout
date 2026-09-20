@@ -17,8 +17,10 @@ import {
 } from 'react-native';
 
 import type { RootStackParamList } from '../navigation';
+import { recordPost, updatePostResults } from '../services/postHistory';
 import { postToPlatforms } from '../services/posting';
 import { isVerified, useAccounts } from '../state/accountsStore';
+import { useColors, type Colors } from '../theme';
 
 /**
  * One post, fanned out (specs/04-posting-flow.md).
@@ -44,6 +46,8 @@ function toAttempt(result: PostResult): Attempt {
 
 export default function ComposerScreen() {
   const navigation = useNavigation<Navigation>();
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { accounts, loading, refresh } = useAccounts();
 
   const [asset, setAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
@@ -52,6 +56,8 @@ export default function ComposerScreen() {
   const [optedOut, setOptedOut] = useState<Set<Platform>>(new Set());
   const [attempts, setAttempts] = useState<Partial<Record<Platform, Attempt>>>({});
   const [posting, setPosting] = useState(false);
+  /** Set once this composer session has a feed entry, so a retry updates it. */
+  const [recordId, setRecordId] = useState<string | null>(null);
 
   const connected = useMemo(
     () => accounts.filter(isVerified).map((account) => account.platform),
@@ -95,6 +101,7 @@ export default function ComposerScreen() {
     setAsset(picked);
     // A new piece of media means the previous post's results no longer apply.
     setAttempts({});
+    setRecordId(null);
   };
 
   const post = async (targets: Platform[]) => {
@@ -113,13 +120,16 @@ export default function ComposerScreen() {
       setAttempts((current) => ({ ...current, [result.platform]: toAttempt(result) }));
 
     try {
-      const results = await postToPlatforms(
-        { caption, mediaUri: asset.uri, mediaType },
-        targets,
-        asset,
-        record,
-      );
+      const content = { caption, mediaUri: asset.uri, mediaType };
+      const results = await postToPlatforms(content, targets, asset, record);
       results.forEach(record);
+
+      // A retry folds into the same feed entry instead of adding a second one.
+      if (recordId) {
+        await updatePostResults(recordId, results);
+      } else {
+        setRecordId((await recordPost(content, results)).id);
+      }
     } catch (cause) {
       // fanOutPost itself failing (e.g. secure storage unreadable) is not a
       // per-platform failure, so it can't be shown on a chip.
@@ -189,6 +199,7 @@ export default function ComposerScreen() {
       <TextInput
         style={styles.caption}
         placeholder="Write one caption for every platform…"
+        placeholderTextColor={colors.textFaint}
         value={caption}
         onChangeText={setCaption}
         multiline
@@ -230,7 +241,7 @@ export default function ComposerScreen() {
         disabled={!canPost}
       >
         {posting ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={colors.onAction} />
         ) : (
           <Text style={styles.primaryText}>
             Post to {selected.length} {selected.length === 1 ? 'account' : 'accounts'}
@@ -266,20 +277,21 @@ export default function ComposerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 20, gap: 14 },
+function createStyles(c: Colors) {
+  return StyleSheet.create({
+  container: { padding: 20, gap: 14, backgroundColor: c.ground, flexGrow: 1 },
   loading: { marginTop: 48 },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 10 },
-  emptyTitle: { fontSize: 20, fontWeight: '700' },
-  emptyBody: { fontSize: 15, color: '#666', textAlign: 'center', lineHeight: 21, marginBottom: 8 },
-  preview: { borderRadius: 12, overflow: 'hidden', backgroundColor: '#eee' },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 10, backgroundColor: c.ground },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: c.text },
+  emptyBody: { fontSize: 15, color: c.textSoft, textAlign: 'center', lineHeight: 21, marginBottom: 8 },
+  preview: { borderRadius: 12, overflow: 'hidden', backgroundColor: c.sunk },
   previewImage: { width: '100%', aspectRatio: 1 },
   previewBadge: {
     position: 'absolute',
     top: 10,
     left: 10,
     backgroundColor: 'rgba(0,0,0,0.65)',
-    color: '#fff',
+    color: c.onAction,
     fontSize: 12,
     fontWeight: '600',
     paddingHorizontal: 8,
@@ -290,23 +302,25 @@ const styles = StyleSheet.create({
   previewEmpty: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: c.line,
     borderStyle: 'dashed',
     paddingVertical: 48,
     alignItems: 'center',
   },
-  previewEmptyText: { color: '#999', fontSize: 15 },
+  previewEmptyText: { color: c.textFaint, fontSize: 15 },
   pickRow: { flexDirection: 'row', gap: 10 },
   caption: {
     minHeight: 96,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: c.line,
     borderRadius: 12,
     padding: 12,
     fontSize: 16,
     textAlignVertical: 'top',
+    color: c.text,
+    backgroundColor: c.surface,
   },
-  sectionLabel: { fontSize: 13, fontWeight: '600', color: '#666', textTransform: 'uppercase' },
+  sectionLabel: { fontSize: 13, fontWeight: '600', color: c.textSoft, textTransform: 'uppercase' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     flexDirection: 'row',
@@ -315,39 +329,40 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 18,
-    backgroundColor: '#e8f0fe',
+    backgroundColor: c.chip,
     borderWidth: 1,
-    borderColor: '#c5d9fb',
+    borderColor: c.chipBorder,
   },
-  chipOff: { backgroundColor: '#f2f2f2', borderColor: '#e0e0e0' },
-  chipFailed: { backgroundColor: '#fdecef', borderColor: '#f3c2cb' },
-  chipStatus: { fontSize: 13, fontWeight: '700', color: '#1a4fa0' },
-  chipText: { fontSize: 14, fontWeight: '600', color: '#1a4fa0' },
-  chipTextOff: { color: '#999' },
+  chipOff: { backgroundColor: c.sunk, borderColor: c.line },
+  chipFailed: { backgroundColor: c.dangerSoft, borderColor: c.danger },
+  chipStatus: { fontSize: 13, fontWeight: '700', color: c.chipText },
+  chipText: { fontSize: 14, fontWeight: '600', color: c.chipText },
+  chipTextOff: { color: c.textFaint },
   primary: {
-    backgroundColor: '#1f1f1f',
+    backgroundColor: c.action,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 4,
   },
-  primaryDisabled: { backgroundColor: '#c4c4c4' },
-  primaryText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  primaryDisabled: { backgroundColor: c.actionDisabled },
+  primaryText: { color: c.onAction, fontSize: 16, fontWeight: '600' },
   secondary: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: c.line,
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 14,
     alignItems: 'center',
   },
-  secondaryText: { fontSize: 14, fontWeight: '600' },
+  secondaryText: { fontSize: 14, fontWeight: '600', color: c.text },
   failure: {
-    backgroundColor: '#fdecef',
+    backgroundColor: c.dangerSoft,
     borderRadius: 12,
     padding: 14,
     gap: 8,
   },
-  failureTitle: { fontSize: 15, fontWeight: '700', color: '#8a1c2b' },
-  failureBody: { fontSize: 14, color: '#6d2530', lineHeight: 20 },
-});
+  failureTitle: { fontSize: 15, fontWeight: '700', color: c.danger },
+  failureBody: { fontSize: 14, color: c.text, lineHeight: 20 },
+  });
+}

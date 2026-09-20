@@ -45,6 +45,25 @@ whichever resolve.
 | platformPostId | string?                        | returned by the platform on success     |
 | error          | string?                        | human-readable failure reason           |
 
-v1 does not need a local database (SQLite) — secure-store key/value entries
-for the 6 possible accounts are sufficient. Do not add SQLite unless a later
-spec (e.g. adding post history) explicitly calls for it.
+## PostRecord (persisted — the home feed)
+
+Post history **is** kept, added after v1's first device builds. One record per
+fan-out, newest first.
+
+| field      | type                    | notes                                        |
+|------------|-------------------------|----------------------------------------------|
+| id         | string                   | local id; a per-platform retry updates the record in place rather than adding a second one |
+| postedAt   | number (epoch ms)        |                                                |
+| caption    | string                   |                                                |
+| mediaUri   | string?                  | the local URI as picked. The OS may clear its cache, so the feed must render when this no longer resolves |
+| mediaType  | 'video' \| 'image'      |                                                |
+| results    | PostRecordResult[]       | platform, status, platformPostId?, error?      |
+
+Stored as one capped JSON list under `post_history_v1` in **AsyncStorage**,
+holding the most recent **50** posts; older ones fall off the end. AsyncStorage
+rather than secure storage because this is plain content — no field on a
+PostRecord is a token, and tokens remain in `expo-secure-store` only.
+
+Still no SQLite. A fixed-length, reverse-chronological list needs no querying,
+so the earlier warning stands for anything beyond this: don't add a database
+unless a feature genuinely needs one.

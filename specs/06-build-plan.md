@@ -221,6 +221,25 @@ before tackling platforms that need the serverless function.
       `r8` return 404. The fix is either EAS or allowing `dl.google.com` in
       the environment's network policy — that one host unblocks all three.
 
+## Phase 10 — Home feed and theming
+
+Added after Phases 0-8, once the app was running on real Android and iOS
+builds. This is a deliberate change to v1's scope: `02-data-model.md`
+previously kept post attempts in memory only.
+
+- [x] Persist post history as a capped list (50) and render it as the app's
+      home screen, showing per-platform outcomes per post.
+- [x] Fold a per-platform retry into the existing record rather than creating
+      a second entry for the same post.
+- [x] Follow the OS light/dark setting; no in-app switch. `userInterfaceStyle`
+      set to "automatic" with `expo-system-ui` installed, which is what makes
+      Android honour it — it was pinned to "light" before, so dark mode could
+      never have worked.
+- [x] Move every screen's colour into `app/theme.ts`; no hardcoded hex values
+      in screens.
+- [ ] Check the feed on a device once real posts exist: the media thumbnail
+      after the OS has cleared its picker cache, and both themes.
+
 ## Phase 9 — iOS port verification
 
 - [ ] Full pass on iOS simulator/device: OAuth redirect URIs, secure store,
