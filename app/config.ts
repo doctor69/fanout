@@ -1,4 +1,5 @@
 import type { Platform } from '@fanout/core-posting';
+import { Platform as Device } from 'react-native';
 
 /**
  * Runtime configuration. EXPO_PUBLIC_* values are inlined at bundle time and
@@ -10,7 +11,27 @@ import type { Platform } from '@fanout/core-posting';
  * needs no secret at all: it uses an installed-app client with PKCE.
  */
 
-export const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+/**
+ * Google issues one OAuth client per platform: an Android client is bound to
+ * the package name plus signing-key fingerprint, an iOS client to the bundle
+ * id. They are different strings and neither works on the other platform, so
+ * the right one is picked at runtime.
+ *
+ * EXPO_PUBLIC_GOOGLE_CLIENT_ID stays as a fallback for a build that only ever
+ * targets one platform.
+ */
+export const GOOGLE_CLIENT_ID =
+  (Device.OS === 'ios'
+    ? process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS
+    : process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID) ??
+  process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ??
+  '';
+
+/** The variable a missing Google client id should be reported against here. */
+export const GOOGLE_CLIENT_ID_VAR =
+  Device.OS === 'ios'
+    ? 'EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS'
+    : 'EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID';
 export const X_CLIENT_ID = process.env.EXPO_PUBLIC_X_CLIENT_ID ?? '';
 export const TIKTOK_CLIENT_KEY = process.env.EXPO_PUBLIC_TIKTOK_CLIENT_KEY ?? '';
 
@@ -35,8 +56,8 @@ function required(value: string, name: string, detail: string): string {
 export function requireGoogleClientId(): string {
   return required(
     GOOGLE_CLIENT_ID,
-    'EXPO_PUBLIC_GOOGLE_CLIENT_ID',
-    'your Google OAuth client id (installed-app type)',
+    GOOGLE_CLIENT_ID_VAR,
+    `your Google OAuth client id for ${Device.OS} (Google issues a separate one per platform)`,
   );
 }
 
@@ -80,7 +101,7 @@ export function requireLinkedInClientId(): string {
 const NEEDS_TOKEN_EXCHANGE: Platform[] = ['tiktok', 'instagram', 'facebook', 'linkedin'];
 
 const CLIENT_ID_VARS: Record<Platform, [value: string, name: string]> = {
-  youtube: [GOOGLE_CLIENT_ID, 'EXPO_PUBLIC_GOOGLE_CLIENT_ID'],
+  youtube: [GOOGLE_CLIENT_ID, GOOGLE_CLIENT_ID_VAR],
   x: [X_CLIENT_ID, 'EXPO_PUBLIC_X_CLIENT_ID'],
   tiktok: [TIKTOK_CLIENT_KEY, 'EXPO_PUBLIC_TIKTOK_CLIENT_KEY'],
   instagram: [META_APP_ID, 'EXPO_PUBLIC_META_APP_ID'],

@@ -330,7 +330,8 @@
   <h1>Platform keys</h1>
   <p class="lede">
     Every platform needs your <em>app</em> registered before it will show a user a consent
-    screen. Six registrations, one per platform. Your users never see any of this.
+    screen. Six registrations, one per platform — plus one extra from Google if you build for
+    iOS as well. Your users never see any of this.
   </p>
 
   <div class="status">
@@ -348,6 +349,7 @@
     <a href="#tiktok">TikTok</a>
     <a href="#meta">Instagram + Facebook</a>
     <a href="#linkedin">LinkedIn</a>
+    <a href="#ios">iOS</a>
     <a href="#envfile">.env</a>
   </nav>
 
@@ -429,10 +431,9 @@
       </ol>
 
       <div class="note">
-        <strong>For iOS later:</strong> Google issues a separate client ID per platform. An
-        Android client is bound to your package name and SHA-1 and won't work in the iOS
-        Simulator — you'll need a second, iOS-type client keyed to bundle ID
-        <code>com.fanout.app</code>.
+        <strong>Building for iOS too?</strong> Google issues a separate client per platform and
+        neither works on the other. You'll need a second, iOS-type client — see
+        <a class="link" href="#ios">Also running on iOS</a> below.
       </div>
     </div>
   </section>
@@ -703,10 +704,87 @@ fanout:/oauth/instagram</pre>
     </div>
   </section>
 
+
+  <!-- ============ iOS ============ -->
+  <section class="interlude" id="ios">
+    <p class="eyebrow">Second platform</p>
+    <h2 style="margin-top:6px">Also running on iOS</h2>
+    <p style="color:var(--ink-soft); font-size:15px; margin-top:8px">
+      One codebase covers both, so this is mostly verification rather than new work. Two
+      things actually differ: what it costs, and Google.
+    </p>
+
+    <h3 style="margin-top:22px">It's free</h3>
+    <p style="font-size:15px; margin-top:6px">
+      Xcode and the iOS Simulator are free, and a Simulator build needs no code signing at
+      all — no Apple ID, no enrolment. What it needs is a Mac; Xcode runs nowhere else.
+    </p>
+    <div class="note tip">
+      The <strong>$99/year Apple Developer Program</strong> only becomes necessary for TestFlight,
+      the App Store, or installing on someone else's device. You can run your own iPhone on a free
+      Apple ID too — the build just expires every 7 days and has to be re-installed.
+    </div>
+
+    <h3 style="margin-top:24px">Google needs a second client ID</h3>
+    <p style="font-size:15px; margin-top:6px">
+      An Android client is bound to your package name and signing fingerprint; an iOS client to
+      your bundle ID. They're different strings and neither works on the other platform.
+    </p>
+    <ol class="steps" style="margin-top:10px">
+      <li>
+        Same Google Cloud project → <strong>Credentials → Create credentials → OAuth client ID</strong>,
+        type <strong>iOS</strong>. Bundle ID:
+        <div class="snip">
+          <pre>com.fanout.app</pre>
+          <button class="copy" type="button">Copy</button>
+        </div>
+      </li>
+      <li>
+        Keep them in separate variables — the app picks the right one at runtime:
+        <div class="snip">
+          <pre>EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID=
+EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS=</pre>
+          <button class="copy" type="button">Copy</button>
+        </div>
+      </li>
+    </ol>
+    <div class="note">
+      <strong>If Google refuses the redirect on iOS:</strong> iOS clients conventionally use
+      Google's reversed-client-ID scheme
+      (<code>com.googleusercontent.apps.&lt;id&gt;:/oauth2redirect</code>) rather than
+      <code>fanout:</code>. If the browser comes back with a redirect_uri error, say so — it's a
+      small change to the YouTube flow plus one scheme entry in <code>app.json</code>. This one is
+      untested so far.
+    </div>
+
+    <h3 style="margin-top:24px">The other five need nothing new</h3>
+    <p style="font-size:15px; margin-top:6px">
+      X, TikTok, Meta and LinkedIn issue one client ID that isn't tied to a platform, and the same
+      <code>fanout:/oauth/…</code> redirect URIs you already registered work on iOS unchanged. No
+      second registration, no extra variables.
+    </p>
+
+    <h3 style="margin-top:24px">Build and run it</h3>
+    <div class="snip">
+      <pre>cd app
+npx expo run:ios</pre>
+      <button class="copy" type="button">Copy</button>
+    </div>
+    <p style="font-size:15px; margin-top:12px; color:var(--ink-soft)">
+      That prebuilds, runs <code>pod install</code>, builds, boots a Simulator and installs. The
+      first <code>pod install</code> is slow — that's normal, not a hang.
+    </p>
+    <div class="note">
+      <strong>Don't use Expo Go for the connect flows.</strong> Expo Go serves its own URL scheme,
+      so the redirect back to <code>fanout:/oauth/…</code> never reaches the app and sign-in looks
+      like it silently failed. The build above is fine.
+    </div>
+  </section>
+
   <!-- ============ ENV FILE ============ -->
   <section class="platform" id="envfile">
     <div class="platform-head">
-      <span class="rank">06</span>
+      <span class="rank">07</span>
       <div class="platform-title">
         <h2>The finished .env</h2>
         <p class="platform-sub">app/.env — gitignored, never committed</p>
@@ -718,7 +796,8 @@ fanout:/oauth/instagram</pre>
         <strong>Set up</strong> on that row in the app and is simply skipped — the others keep working.
       </p>
       <div class="snip">
-        <pre>EXPO_PUBLIC_GOOGLE_CLIENT_ID=
+        <pre>EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID=
+EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS=
 EXPO_PUBLIC_X_CLIENT_ID=
 EXPO_PUBLIC_TIKTOK_CLIENT_KEY=
 EXPO_PUBLIC_META_APP_ID=

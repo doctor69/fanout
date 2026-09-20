@@ -64,9 +64,13 @@ proves the whole chain: browser sign-in → token → secure storage → posting
    by default. Open the client's **Advanced Settings** and enable the custom URI
    scheme method, or the redirect back to `fanout:/oauth/youtube` will be
    rejected.
-6. Copy the client ID into `app/.env`:
+6. Copy the client ID into `app/.env`. Google issues a separate client per
+   platform — an Android one is bound to the package name plus signing
+   fingerprint, an iOS one to the bundle id — so they live in separate
+   variables and the app picks the right one at runtime:
    ```
-   EXPO_PUBLIC_GOOGLE_CLIENT_ID=123456789-abc.apps.googleusercontent.com
+   EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID=123456789-abc.apps.googleusercontent.com
+   EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS=
    ```
 7. Restart the bundler with `--clear`. Metro caches the old inlined value
    otherwise and you'll keep seeing the same error.
