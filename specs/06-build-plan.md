@@ -191,6 +191,30 @@ before tackling platforms that need the serverless function.
 - [ ] Run through `00-product-overview.md`'s success criteria end to end.
       **Doctor's device pass**, once the credentials are in place.
 
+## Packaging (Android)
+
+- [x] Verified `npx expo prebuild --platform android` generates a correct
+      native project: the `fanout` scheme intent-filter is present, so the
+      OAuth redirects come back to the app, and `MainActivity` is
+      `singleTask`.
+- [x] Fixed a bug prebuild surfaced: `expo-image-picker`'s config plugin adds
+      `RECORD_AUDIO` but never `CAMERA`, and `launchCameraAsync` requires
+      `CAMERA` to be *granted* — which Android can never do for a permission
+      the manifest doesn't declare. The composer's camera button would have
+      been permanently broken. Now declared via `android.permissions` in
+      `app.json`.
+- [x] `eas.json` with development / preview / production profiles, so an APK
+      can be built without a local Android SDK.
+- [ ] Before a Play release: declaring `CAMERA` makes Play infer
+      `uses-feature android.hardware.camera` as **required**, which hides the
+      app from camera-less devices. If that matters, add a config plugin
+      setting `required="false"`.
+- [ ] Actually produce a build. **Blocked in the dev container, not in the
+      repo:** `dl.google.com` is blocked by the environment's network policy,
+      and that one host serves the Android Gradle Plugin, the AndroidX
+      artifacts and the SDK platform, so no local Gradle build can resolve
+      anything. Build via EAS, or locally on a machine with the SDK.
+
 ## Phase 9 — iOS port verification
 
 - [ ] Full pass on iOS simulator/device: OAuth redirect URIs, secure store,

@@ -42,6 +42,39 @@ sandboxed environments. The equivalent is to look the version up in
 with `npm install --workspace=app <pkg>@<range>` — same result, npm registry
 only.
 
+## Building an Android app
+
+The native `android/` directory isn't committed — Expo generates it from
+`app.json`, so configuration changes belong there, not in generated files.
+
+**With EAS (no local Android SDK needed):**
+
+```bash
+npm install -g eas-cli
+eas login
+cd app
+eas build --platform android --profile development  # dev client, for OAuth testing
+eas build --platform android --profile preview      # installable APK
+eas build --platform android --profile production   # .aab for Play
+```
+
+`EXPO_PUBLIC_*` values are baked in at build time, and `.env` is gitignored so
+EAS won't upload it — set them as EAS environment variables (`eas env:create`)
+or they'll be empty in the build.
+
+**Locally**, with Android Studio or the command-line tools installed and
+`ANDROID_HOME` set:
+
+```bash
+cd app
+npx expo prebuild --platform android   # generates android/
+npx expo run:android                   # builds, installs and runs
+```
+
+Use the **development** profile, not Expo Go, for anything touching OAuth:
+the connect flows redirect to `fanout:/oauth/<platform>`, and Expo Go serves
+its own URL scheme, so the redirect never comes back to the app.
+
 ## Status
 
 All six platforms are implemented: YouTube, X, TikTok, Instagram, Facebook
